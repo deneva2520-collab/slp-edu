@@ -272,7 +272,7 @@ const addDemoParticipants = async () => {
   display: "inline-block"
 }}>
   <QRCodeSVG
-    value={`http://192.168.100.32:3000/join?session=${sessionId}`}
+    value={`${window.location.origin}/join?session=${sessionId}`}
     size={260}
     bgColor={"#ffffff"}
     fgColor={"#000000"}

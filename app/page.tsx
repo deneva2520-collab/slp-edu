@@ -73,6 +73,7 @@ const overlayStyle: React.CSSProperties = {
 const contentStyle: React.CSSProperties = {
   zIndex: 2,
   padding: "20px"
+  marginTop: "40px"
 };
 
 const buttonStyle: React.CSSProperties = {

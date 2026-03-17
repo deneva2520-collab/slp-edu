@@ -22,9 +22,9 @@ export default function GamePage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const sessionId =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("sessionId")
-      : null;
+  typeof window !== "undefined"
+    ? sessionStorage.getItem("hostSessionId")
+    : null;
 
   // 🔐 Взимаме participantId
   useEffect(() => {

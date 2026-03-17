@@ -25,6 +25,7 @@ export default function GamePage() {
   typeof window !== "undefined"
     ? sessionStorage.getItem("hostSessionId")
     : null;
+  console.log("GAME sessionId:", sessionId);
 
   // 🔐 Взимаме participantId
   useEffect(() => {

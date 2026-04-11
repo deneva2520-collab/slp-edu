@@ -93,11 +93,9 @@ export default function GamePage() {
 
   // ✅ Въпрос + reset + таймер
   useEffect(() => {
-  if (!questions || questions.length === 0) return;
+  if (status === "finished") return;
 
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-  }
+  if (!questions || questions.length === 0) return;
 
   const newQuestion = questions[currentIndex];
   if (!newQuestion) return;
@@ -107,11 +105,12 @@ export default function GamePage() {
   setShowCorrect(false);
   setTimer(15);
 
+  if (intervalRef.current) clearInterval(intervalRef.current);
+
   intervalRef.current = setInterval(() => {
     setTimer((prev) => {
-      if (prev <= 1) {
+      if (prev <= 1 || showCorrect) {
         clearInterval(intervalRef.current!);
-        setShowCorrect(true);
         return 0;
       }
       return prev - 1;
@@ -121,7 +120,7 @@ export default function GamePage() {
   return () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
-}, [currentIndex, questions]);
+}, [currentIndex, questions, status]);
 
   // ✅ Отговор
   const handleSelect = async (index: number) => {
@@ -209,28 +208,28 @@ return (
   let background = "#002b15";
 
   if (selected !== null) {
-    if (isCorrect) background = "#00ff88";
-    else if (isSelected) background = "#ff4d4d";
-  }
-
+  if (isCorrect) background = "#00ff88";
+  else if (isSelected) background = "#ff4d4d";
+}
   return (
     <button
       key={i}
       onClick={() => handleSelect(i)}
       style={{
-        display: "block",
-        width: "90%",
-        margin: "10px auto",
-        padding: "15px",
-        backgroundColor: background,
-        color: isCorrect ? "#003d1a" : "#00ff88",
-        border: "2px solid #00ff88",
-        borderRadius: "10px",
-        fontSize: "18px",
-        cursor: "pointer",
-        position: "relative",
-        zIndex: 20,
-      }}
+  display: "block",
+  width: "90%",
+  margin: "10px auto",
+  padding: "15px",
+  backgroundColor: background,
+  color: "#00ff88",
+  border: "2px solid #00ff88",
+  borderRadius: "12px",
+  fontSize: "18px",
+  cursor: "pointer",
+  position: "relative",
+  zIndex: 20,
+  boxShadow: "0 0 10px rgba(0,255,136,0.3)",
+}}
     >
       {opt}
     </button>

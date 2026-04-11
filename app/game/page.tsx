@@ -101,7 +101,7 @@ export default function GamePage() {
     setQuestion(newQuestion);
     setSelected(null);
     setShowCorrect(false);
-    setTimer(10);
+    setTimer(15);
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
@@ -123,7 +123,7 @@ export default function GamePage() {
 
   // ✅ Отговор
   const handleSelect = async (index: number) => {
-    if (selected !== null || showCorrect || status === "finished") return;
+    if (selected !== null || status === "finished") return;
 
     setSelected(index);
 
@@ -193,8 +193,9 @@ export default function GamePage() {
         : question.options.split(/(?=[А-Я])/)
       ).map((opt: string, i: number) => (
         <button
-          key={i}
-          onClick={() => handleSelect(i)}
+  key={i}
+  onClick={() => handleSelect(i)}
+  disabled={showCorrect}
           style={{
             display: "block",
             margin: "10px",

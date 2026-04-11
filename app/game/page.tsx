@@ -93,33 +93,35 @@ export default function GamePage() {
 
   // ✅ Въпрос + reset + таймер
   useEffect(() => {
-    if (!questions || questions.length === 0) return;
+  if (!questions || questions.length === 0) return;
 
-    const newQuestion = questions[currentIndex];
-    if (!newQuestion) return;
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+  }
 
-    setQuestion(newQuestion);
-    setSelected(null);
-    setShowCorrect(false);
-    setTimer(15);
+  const newQuestion = questions[currentIndex];
+  if (!newQuestion) return;
 
+  setQuestion(newQuestion);
+  setSelected(null);
+  setShowCorrect(false);
+  setTimer(15);
+
+  intervalRef.current = setInterval(() => {
+    setTimer((prev) => {
+      if (prev <= 1) {
+        clearInterval(intervalRef.current!);
+        setShowCorrect(true);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-
-    intervalRef.current = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current!);
-          setShowCorrect(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [currentIndex, questions]);
+  };
+}, [currentIndex, questions]);
 
   // ✅ Отговор
   const handleSelect = async (index: number) => {
@@ -187,12 +189,16 @@ if (status === "finished") {
 
 return (
   <main
-    style={{
-      position: "relative",
-      zIndex: 10,
-      textAlign: "center",
-    }}
-  >
+  style={{
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #003d1a, #001a0d)",
+    color: "#00ff88",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
     <h2>⏳ {timer}</h2>
     <h1>{question.question}</h1>
 

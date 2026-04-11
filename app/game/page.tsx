@@ -188,11 +188,33 @@ export default function GamePage() {
       <h2>⏳ {timer}</h2>
       <h1>{question.question}</h1>
 
-      {question.options.map((opt: string, i: number) => (
-        <button key={i} onClick={() => handleSelect(i)}>
-          {opt}
-        </button>
-      ))}
+{Array.isArray(question.options)
+  ? question.options.map((opt: string, i: number) => (
+      <button
+        key={i}
+        onClick={() => handleSelect(i)}
+        style={{
+          display: "block",
+          margin: "10px",
+          padding: "10px",
+        }}
+      >
+        {opt}
+      </button>
+    ))
+  : question.options.split(/(?=[А-Я])/).map((opt: string, i: number) => (
+      <button
+        key={i}
+        onClick={() => handleSelect(i)}
+        style={{
+          display: "block",
+          margin: "10px",
+          padding: "10px",
+        }}
+      >
+        {opt}
+      </button>
+    ))}
     </main>
   );
 }

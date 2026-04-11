@@ -127,28 +127,7 @@ const successRate =
 
   return () => unsubscribe();
 }, [sessionId]);
-// ⭐ DEMO MODE – добавя фалшиви участници
-const addDemoParticipants = async () => {
-  if (!sessionId) return;
 
-  const participantsRef = collection(
-    db,
-    "sessions",
-    sessionId,
-    "participants"
-  );
-
-  const demoPlayers = ["Алекс", "Мария", "Иван", "Георги"];
-
-  for (const name of demoPlayers) {
-    await addDoc(participantsRef, {
-      name,
-      score: 0,
-      answeredQuestionIndex: -1,
-      joinedAt: new Date()
-    });
-  }
-};
   const startGame = async () => {
     if (!sessionId) return;
 
@@ -304,24 +283,7 @@ const addDemoParticipants = async () => {
               Започни състезание
             </button>
           )}
-          {/* ⭐ DEMO MODE BUTTON */}
-{status === "waiting" && (
-  <button
-    onClick={addDemoParticipants}
-    style={{
-      marginTop: "15px",
-      padding: "10px 20px",
-      borderRadius: "8px",
-      border: "1px solid #00ff88",
-      background: "transparent",
-      color: "#00ff88",
-      cursor: "pointer"
-    }}
-  >
-    + Добави демо участници
-  </button>
-)}
-
+          
           {status === "in_progress" && (
   <>
     <h2 style={{ marginTop: "20px", color: "yellow" }}>

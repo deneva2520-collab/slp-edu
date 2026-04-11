@@ -123,9 +123,11 @@ export default function GamePage() {
 
   // ✅ Отговор
   const handleSelect = async (index: number) => {
-    if (selected !== null || status === "finished") return;
+  console.log("CLICKED:", index); // 
 
-    setSelected(index);
+  if (selected !== null || status === "finished") return;
+
+  setSelected(index);
 
     if (!sessionId || !participantId || !question) return;
 

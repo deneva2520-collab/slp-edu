@@ -2,366 +2,197 @@
 
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../lib/firebase";
-import { doc, onSnapshot, runTransaction } from "firebase/firestore";
-import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
-import { collection } from "firebase/firestore";
+import { doc, onSnapshot, runTransaction, collection } from "firebase/firestore";
 
 export default function GamePage() {
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [question, setQuestion] = useState<any>(null);
-  const [timer, setTimer] = useState(20);
+  const [timer, setTimer] = useState(10);
   const [selected, setSelected] = useState<number | null>(null);
   const [showCorrect, setShowCorrect] = useState(false);
-  const [status, setStatus] = useState("in_progress");
+  const [status, setStatus] = useState("waiting");
   const [participants, setParticipants] = useState<any[]>([]);
   const [participantId, setParticipantId] = useState<string | null>(null);
-  const getSessionFromUrl = () => {
-  if (typeof window === "undefined") return null;
 
-  const params = new URLSearchParams(window.location.search);
-  return params.get("session");
-};
-
-  const { width, height } = useWindowSize();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-<<<<<<< HEAD
-  const sessionId =
-  typeof window !== "undefined"
-    ? getSessionFromUrl() || sessionStorage.getItem("hostSessionId")
-    : null;
-  console.log("GAME sessionId:", sessionId);
-=======
- const [sessionId, setSessionId] = useState<string | null>(null);
-
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const params = new URLSearchParams(window.location.search);
-  const session = params.get("session");
-
-  if (session) {
-    setSessionId(session);
-    sessionStorage.setItem("sessionId", session);
-  }
-}, []);
->>>>>>> 948c0cf (fix quiz bug)
-
-  "use client";
-
-<<<<<<< HEAD
-import { useEffect, useRef, useState } from "react";
-import { db } from "../../lib/firebase";
-import { doc, onSnapshot, runTransaction, collection } from "firebase/firestore";
-import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
-
-export default function GamePage() {
-const [questions, setQuestions] = useState<any[]>([]);
-const [currentIndex, setCurrentIndex] = useState(0);
-const [question, setQuestion] = useState<any>(null);
-const [timer, setTimer] = useState(20);
-const [selected, setSelected] = useState<number | null>(null);
-const [showCorrect, setShowCorrect] = useState(false);
-const [status, setStatus] = useState("in_progress");
-const [participants, setParticipants] = useState<any[]>([]);
-const [participantId, setParticipantId] = useState<string | null>(null);
-
-const [sessionId, setSessionId] = useState<string | null>(null);
-
-const { width, height } = useWindowSize();
-const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-// ✅ Взимаме sessionId от URL или storage
-=======
-  // 🔥 Live listener
+  // ✅ Взимане на sessionId
   useEffect(() => {
-  if (!sessionId) return;
+    if (typeof window === "undefined") return;
 
-  const sessionRef = doc(db, "sessions", sessionId);
+    const params = new URLSearchParams(window.location.search);
+    const session = params.get("session");
 
-  const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
-    const data = snapshot.data();
-    console.log("SESSION DATA:", data);
-    if (!data) return;
+    if (session) {
+      setSessionId(session);
+      sessionStorage.setItem("sessionId", session);
+    } else {
+      const stored = sessionStorage.getItem("sessionId");
+      setSessionId(stored);
+    }
+  }, []);
 
-    setStatus(data.status);
+  // ✅ participantId
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setParticipantId(sessionStorage.getItem("participantId"));
+    }
+  }, []);
 
-    const newIndex = data.currentQuestion || 0;
+  // 🔥 Session listener (ВАЖНО)
+  useEffect(() => {
+    if (!sessionId) return;
 
-    setQuestions(data.questions || []);
-    setCurrentIndex(newIndex);
-  });
+    const sessionRef = doc(db, "sessions", sessionId);
 
-  return () => unsubscribe();
-}, [sessionId]);
->>>>>>> 948c0cf (fix quiz bug)
-useEffect(() => {
-if (typeof window === "undefined") return;
+    const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
+      const data = snapshot.data();
+      if (!data) return;
 
-```
-const params = new URLSearchParams(window.location.search);
-const urlSession = params.get("session");
+      setStatus(data.status);
 
-if (urlSession) {
-  console.log("FROM URL:", urlSession);
-  setSessionId(urlSession);
-  sessionStorage.setItem("sessionId", urlSession);
-} else {
-  const stored = sessionStorage.getItem("sessionId");
-  console.log("FROM STORAGE:", stored);
-  setSessionId(stored);
-}
-```
+      const newIndex = data.currentQuestion || 0;
 
-}, []);
-
-// DEBUG
-useEffect(() => {
-console.log("FINAL sessionId:", sessionId);
-}, [sessionId]);
-
-<<<<<<< HEAD
-// 🔐 participantId
-useEffect(() => {
-if (typeof window !== "undefined") {
-setParticipantId(sessionStorage.getItem("participantId"));
-}
-}, []);
-
-// 🔥 Session listener
-useEffect(() => {
-if (!sessionId) return;
-
-```
-const sessionRef = doc(db, "sessions", sessionId);
-
-const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
-  const data = snapshot.data();
-  if (!data) return;
-
-  setStatus(data.status);
-
-  if (data.status === "finished") return;
-=======
-  // 🔄 Таймер за играчите (само визуален)
-   useEffect(() => {
-  if (!questions || questions.length === 0) return;
-
-  const newQuestion = questions[currentIndex];
-  console.log("QUESTIONS:", questions);
-  console.log("INDEX:", currentIndex);
-  console.log("NEW QUESTION:", newQuestion);
-
-  if (!newQuestion) return;
-
-  setQuestion(newQuestion);
-  setSelected(null);
-  setShowCorrect(false);
-  setTimer(10);
-
-  if (intervalRef.current) clearInterval(intervalRef.current);
-
-  intervalRef.current = setInterval(() => {
-    setTimer((prev) => {
-      if (prev <= 1) {
-        clearInterval(intervalRef.current!);
-        setShowCorrect(true);
-        return 0;
-      }
-      return prev - 1;
+      setQuestions(data.questions || []);
+      setCurrentIndex(newIndex);
     });
-  }, 1000);
 
-  return () => {
+    return () => unsubscribe();
+  }, [sessionId]);
+
+  // 🔥 Participants listener
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const participantsRef = collection(
+      db,
+      "sessions",
+      sessionId,
+      "participants"
+    );
+
+    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
+      const players: any[] = [];
+
+      snapshot.forEach((doc) => {
+        players.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      setParticipants(players);
+    });
+
+    return () => unsubscribe();
+  }, [sessionId]);
+
+  // ⏱️ Таймер + въпрос
+  useEffect(() => {
+    if (!questions || questions.length === 0) return;
+
+    const newQuestion = questions[currentIndex];
+    if (!newQuestion) return;
+
+    setQuestion(newQuestion);
+    setSelected(null);
+    setShowCorrect(false);
+    setTimer(10);
+
     if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-}, [currentIndex, questions]);
->>>>>>> 948c0cf (fix quiz bug)
 
-  if (data.questions) {
-    const newIndex = data.currentQuestion || 0;
-    setQuestions(data.questions);
-    setCurrentIndex((prev) =>
-      prev !== newIndex ? newIndex : prev
+    intervalRef.current = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current!);
+          setShowCorrect(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [currentIndex, questions]);
+
+  // ✅ Запис на точки
+  const handleSelect = async (index: number) => {
+    if (selected !== null || showCorrect || status === "finished") return;
+
+    setSelected(index);
+
+    if (!sessionId || !participantId || !question) return;
+
+    const participantRef = doc(
+      db,
+      "sessions",
+      sessionId,
+      "participants",
+      participantId
+    );
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(participantRef);
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+
+        if (data.answeredQuestionIndex === currentIndex) return;
+
+        let newScore = data.score;
+
+        if (index === question.correctIndex) {
+          newScore += 1;
+        }
+
+        transaction.update(participantRef, {
+          score: newScore,
+          answeredQuestionIndex: currentIndex,
+        });
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // UI
+  if (!sessionId) return <h1>Няма session</h1>;
+
+  if (status === "waiting") return <h1>Изчакай да започне...</h1>;
+
+  if (!question) return <h1>Зареждане...</h1>;
+
+  if (status === "finished") {
+    return (
+      <main>
+        <h1>🏆 Класиране</h1>
+        {participants
+          .slice()
+          .sort((a, b) => b.score - a.score)
+          .map((p, i) => (
+            <div key={p.id}>
+              #{i + 1} – {p.name} ({p.score})
+            </div>
+          ))}
+      </main>
     );
   }
-});
 
-return () => unsubscribe();
-```
-
-}, [sessionId]);
-
-// 🔥 Participants listener
-useEffect(() => {
-if (!sessionId) return;
-
-```
-const participantsRef = collection(
-  db,
-  "sessions",
-  sessionId,
-  "participants"
-);
-
-const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
-  const players: any[] = [];
-
-  snapshot.forEach((doc) => {
-    players.push({
-      id: doc.id,
-      ...doc.data(),
-    });
-  });
-
-  setParticipants(players);
-});
-
-return () => unsubscribe();
-```
-
-}, [sessionId]);
-
-// ⏱️ Таймер
-useEffect(() => {
-if (questions.length === 0 || status === "finished") return;
-
-```
-const newQuestion = questions[currentIndex];
-
-setQuestion(newQuestion);
-setSelected(null);
-setShowCorrect(false);
-setTimer(10);
-
-if (intervalRef.current) clearInterval(intervalRef.current);
-
-intervalRef.current = setInterval(() => {
-  setTimer((prev) => {
-    if (prev <= 1) {
-      clearInterval(intervalRef.current!);
-      setShowCorrect(true);
-      return 0;
-    }
-    return prev - 1;
-  });
-}, 1000);
-
-return () => {
-  if (intervalRef.current) clearInterval(intervalRef.current);
-};
-```
-
-}, [currentIndex, questions, status]);
-
-// ✅ Точки
-const handleEndOfQuestion = async (
-finishedQuestion: any,
-selectedIndex: number
-) => {
-if (!sessionId || !participantId) return;
-
-```
-const participantRef = doc(
-  db,
-  "sessions",
-  sessionId,
-  "participants",
-  participantId
-);
-
-try {
-  await runTransaction(db, async (transaction) => {
-    const participantDoc = await transaction.get(participantRef);
-    if (!participantDoc.exists()) return;
-
-    const data = participantDoc.data();
-
-    if (data.answeredQuestionIndex === currentIndex) return;
-
-    let newScore = data.score;
-
-    if (selectedIndex === finishedQuestion.correctIndex) {
-      newScore = data.score + 1;
-    }
-
-    transaction.update(participantRef, {
-      score: newScore,
-      answeredQuestionIndex: currentIndex,
-    });
-  });
-} catch (error) {
-  console.error("Transaction failed:", error);
-}
-```
-
-};
-
-const handleSelect = (index: number) => {
-if (selected !== null || showCorrect || status === "finished") return;
-
-```
-setSelected(index);
-
-if (question) {
-  handleEndOfQuestion(question, index);
-}
-```
-
-};
-
-return ( <main style={mainStyle}>
-{status === "finished" ? (
-<> <h1>🏆 Класиране</h1>
-
-```
-      {participants
-        .slice()
-        .sort((a, b) => b.score - a.score)
-        .map((player, index) => (
-          <div key={player.id}>
-            #{index + 1} – {player.name} ({player.score})
-          </div>
-        ))}
-    </>
-  ) : !question ? (
-    <h1>Зареждане...</h1>
-  ) : (
-    <>
+  return (
+    <main>
       <h2>⏳ {timer}</h2>
       <h1>{question.question}</h1>
 
-      {question.options.map((option: string, index: number) => (
-        <button
-          key={index}
-          onClick={() => handleSelect(index)}
-          disabled={showCorrect}
-          style={optionStyle}
-        >
-          {option}
+      {question.options.map((opt: string, i: number) => (
+        <button key={i} onClick={() => handleSelect(i)}>
+          {opt}
         </button>
       ))}
-    </>
-  )}
-</main>
-```
-
-);
+    </main>
+  );
 }
-
-const mainStyle: React.CSSProperties = {
-minHeight: "100vh",
-display: "flex",
-flexDirection: "column",
-alignItems: "center",
-justifyContent: "center",
-};
-
-const optionStyle: React.CSSProperties = {
-margin: "10px",
-padding: "10px",
-};
-

@@ -123,94 +123,113 @@ export default function GamePage() {
 
   // ✅ Отговор
   const handleSelect = async (index: number) => {
-  console.log("CLICKED:", index); // 
+  console.log("CLICKED:", index);
 
   if (selected !== null || status === "finished") return;
 
   setSelected(index);
 
-    if (!sessionId || !participantId || !question) return;
+  if (!sessionId || !participantId || !question) return;
 
-    const participantRef = doc(
-      db,
-      "sessions",
-      sessionId,
-      "participants",
-      participantId
-    );
+  const participantRef = doc(
+    db,
+    "sessions",
+    sessionId,
+    "participants",
+    participantId
+  );
 
-    try {
-      await runTransaction(db, async (transaction) => {
-        const snap = await transaction.get(participantRef);
-        if (!snap.exists()) return;
+  try {
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(participantRef);
+      if (!snap.exists()) return;
 
-        const data = snap.data();
+      const data = snap.data();
 
-        if (data.answeredQuestionIndex === currentIndex) return;
+      if (data.answeredQuestionIndex === currentIndex) return;
 
-        let newScore = data.score;
+      let newScore = data.score;
 
-        if (index === question.correctIndex) {
-          newScore += 1;
-        }
+      if (index === question.correctIndex) {
+        newScore += 1;
+      }
 
-        transaction.update(participantRef, {
-          score: newScore,
-          answeredQuestionIndex: currentIndex,
-        });
+      transaction.update(participantRef, {
+        score: newScore,
+        answeredQuestionIndex: currentIndex,
       });
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    });
+  } catch (e) {
+    console.error(e);
+  }
+};
 
-  // UI
-  if (!sessionId) return <h1>Няма session</h1>;
-  if (status === "waiting") return <h1>Изчакай да започне...</h1>;
-  if (!question) return <h1>Зареждане...</h1>;
+// UI
+if (!sessionId) return <h1>Няма session</h1>;
+if (status === "waiting") return <h1>Изчакай да започне...</h1>;
+if (!question) return <h1>Зареждане...</h1>;
 
-  if (status === "finished") {
-    return (
-      <main>
-        <h1>🏆 Класиране</h1>
-        {participants
-          .slice()
-          .sort((a, b) => b.score - a.score)
-          .map((p, i) => (
-            <div key={p.id}>
-              #{i + 1} – {p.name} ({p.score})
-            </div>
-          ))}
-      </main>
-    );
+if (status === "finished") {
+  return (
+    <main>
+      <h1>🏆 Класиране</h1>
+      {participants
+        .slice()
+        .sort((a, b) => b.score - a.score)
+        .map((p, i) => (
+          <div key={p.id}>
+            #{i + 1} – {p.name} ({p.score})
+          </div>
+        ))}
+    </main>
+  );
+}
+
+return (
+  <main
+    style={{
+      position: "relative",
+      zIndex: 10,
+      textAlign: "center",
+    }}
+  >
+    <h2>⏳ {timer}</h2>
+    <h1>{question.question}</h1>
+
+    {(question.options || []).map((opt: string, i: number) => {
+  const isSelected = selected === i;
+  const isCorrect = i === question.correctIndex;
+
+  let background = "#002b15";
+
+  if (selected !== null) {
+    if (isCorrect) background = "#00ff88";
+    else if (isSelected) background = "#ff4d4d";
   }
 
   return (
-    <main>
-      <h2>⏳ {timer}</h2>
-      <h1>{question.question}</h1>
-
-      {(question.options || []).map((opt: string, i: number) => (
-  <button
-  key={i}
-  onClick={() => handleSelect(i)}
-  disabled={selected !== null}
-    style={{
-  display: "block",
-  width: "90%",
-  margin: "10px auto",
-  padding: "15px",
-  backgroundColor: "#002b15",
-  color: "#00ff88",
-  border: "2px solid #00ff88",
-  borderRadius: "10px",
-  fontSize: "18px",
-  cursor: "pointer",
-}}
-  >
-    {opt}
-  </button>
-))}
-    </main>
+    <button
+      key={i}
+      onClick={() => handleSelect(i)}
+      style={{
+        display: "block",
+        width: "90%",
+        margin: "10px auto",
+        padding: "15px",
+        backgroundColor: background,
+        color: isCorrect ? "#003d1a" : "#00ff88",
+        border: "2px solid #00ff88",
+        borderRadius: "10px",
+        fontSize: "18px",
+        cursor: "pointer",
+        position: "relative",
+        zIndex: 20,
+      }}
+    >
+      {opt}
+    </button>
   );
-};
+})}
+   </main>
+);
+}

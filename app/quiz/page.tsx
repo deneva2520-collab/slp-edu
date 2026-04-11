@@ -180,40 +180,40 @@ const addDemoParticipants = async () => {
 
   // ✅ Host таймер
   useEffect(() => {
-    if (status !== "in_progress" || !sessionId) return;
+  if (status !== "in_progress") return;
 
-    const interval = setInterval(() => {
-     setAutoTimer((prev) => prev - 1);
-    }, 1000);
+  const interval = setInterval(() => {
+    setAutoTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+  }, 1000);
 
-    return () => clearInterval(interval);
-  }, [status, sessionId]);
+  return () => clearInterval(interval);
+}, [status]);
 
   // ✅ Смяна на въпросите (само Host)
-  useEffect(() => {
-    if (!sessionId || status !== "in_progress") return;
+ useEffect(() => {
+  if (!sessionId || status !== "in_progress") return;
 
-    if (autoTimer === 0)
-      setAutoTimer(10); {
-      const moveNext = async () => {
-        const sessionRef = doc(db, "sessions", sessionId);
-        const nextQuestion = currentQuestion + 1;
+  if (autoTimer === 0) {
+    const moveNext = async () => {
+      const sessionRef = doc(db, "sessions", sessionId);
+      const nextQuestion = currentQuestion + 1;
 
-        if (nextQuestion < 5) {
-          await updateDoc(sessionRef, {
-            currentQuestion: nextQuestion,
-          });
-          setCurrentQuestion(nextQuestion);
-        } else {
-          await updateDoc(sessionRef, {
-            status: "finished",
-          });
-        }
-      };
+      if (nextQuestion < 5) {
+        await updateDoc(sessionRef, {
+          currentQuestion: nextQuestion,
+        });
+        setCurrentQuestion(nextQuestion);
+        setAutoTimer(10); // reset таймера
+      } else {
+        await updateDoc(sessionRef, {
+          status: "finished",
+        });
+      }
+    };
 
-      moveNext();
-    }
-  }, [autoTimer]);
+    moveNext();
+  }
+}, [autoTimer, sessionId, status]);
 
   return (
   <main style={mainStyle}>

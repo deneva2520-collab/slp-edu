@@ -190,9 +190,9 @@ export default function GamePage() {
 
       {(question.options || []).map((opt: string, i: number) => (
   <button
-    key={i}
-    onClick={() => handleSelect(i)}
-    disabled={showCorrect}
+  key={i}
+  onClick={() => handleSelect(i)}
+  disabled={selected !== null}
     style={{
   display: "block",
   width: "90%",

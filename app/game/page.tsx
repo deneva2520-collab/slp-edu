@@ -194,10 +194,17 @@ export default function GamePage() {
     onClick={() => handleSelect(i)}
     disabled={showCorrect}
     style={{
-      display: "block",
-      margin: "10px",
-      padding: "10px",
-    }}
+  display: "block",
+  width: "90%",
+  margin: "10px auto",
+  padding: "15px",
+  backgroundColor: "#002b15",
+  color: "#00ff88",
+  border: "2px solid #00ff88",
+  borderRadius: "10px",
+  fontSize: "18px",
+  cursor: "pointer",
+}}
   >
     {opt}
   </button>

@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../lib/firebase";
-import { doc, onSnapshot, runTransaction, collection } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  runTransaction,
+  collection,
+} from "firebase/firestore";
 
 export default function GamePage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -18,7 +23,7 @@ export default function GamePage() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ✅ Взимане на sessionId
+  // ✅ sessionId
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -41,7 +46,7 @@ export default function GamePage() {
     }
   }, []);
 
-  // 🔥 Session listener (ВАЖНО)
+  // 🔥 Session listener
   useEffect(() => {
     if (!sessionId) return;
 
@@ -52,17 +57,14 @@ export default function GamePage() {
       if (!data) return;
 
       setStatus(data.status);
-
-      const newIndex = data.currentQuestion || 0;
-
       setQuestions(data.questions || []);
-      setCurrentIndex(newIndex);
+      setCurrentIndex(data.currentQuestion || 0);
     });
 
     return () => unsubscribe();
   }, [sessionId]);
 
-  // 🔥 Participants listener
+  // 🔥 Participants
   useEffect(() => {
     if (!sessionId) return;
 
@@ -89,7 +91,7 @@ export default function GamePage() {
     return () => unsubscribe();
   }, [sessionId]);
 
-  // ⏱️ Таймер + въпрос
+  // ✅ Въпрос + reset + таймер
   useEffect(() => {
     if (!questions || questions.length === 0) return;
 
@@ -119,7 +121,7 @@ export default function GamePage() {
     };
   }, [currentIndex, questions]);
 
-  // ✅ Запис на точки
+  // ✅ Отговор
   const handleSelect = async (index: number) => {
     if (selected !== null || showCorrect || status === "finished") return;
 
@@ -162,9 +164,7 @@ export default function GamePage() {
 
   // UI
   if (!sessionId) return <h1>Няма session</h1>;
-
   if (status === "waiting") return <h1>Изчакай да започне...</h1>;
-
   if (!question) return <h1>Зареждане...</h1>;
 
   if (status === "finished") {
@@ -188,33 +188,22 @@ export default function GamePage() {
       <h2>⏳ {timer}</h2>
       <h1>{question.question}</h1>
 
-{Array.isArray(question.options)
-  ? question.options.map((opt: string, i: number) => (
-      <button
-        key={i}
-        onClick={() => handleSelect(i)}
-        style={{
-          display: "block",
-          margin: "10px",
-          padding: "10px",
-        }}
-      >
-        {opt}
-      </button>
-    ))
-  : question.options.split(/(?=[А-Я])/).map((opt: string, i: number) => (
-      <button
-        key={i}
-        onClick={() => handleSelect(i)}
-        style={{
-          display: "block",
-          margin: "10px",
-          padding: "10px",
-        }}
-      >
-        {opt}
-      </button>
-    ))}
+      {(Array.isArray(question.options)
+        ? question.options
+        : question.options.split(/(?=[А-Я])/)
+      ).map((opt: string, i: number) => (
+        <button
+          key={i}
+          onClick={() => handleSelect(i)}
+          style={{
+            display: "block",
+            margin: "10px",
+            padding: "10px",
+          }}
+        >
+          {opt}
+        </button>
+      ))}
     </main>
   );
-}
+};

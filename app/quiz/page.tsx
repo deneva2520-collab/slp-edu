@@ -183,7 +183,7 @@ const addDemoParticipants = async () => {
     if (status !== "in_progress" || !sessionId) return;
 
     const interval = setInterval(() => {
-      setAutoTimer((prev) => (prev <= 1 ? 10 : prev - 1));
+     setAutoTimer((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -193,7 +193,8 @@ const addDemoParticipants = async () => {
   useEffect(() => {
     if (!sessionId || status !== "in_progress") return;
 
-    if (autoTimer === 10) {
+    if (autoTimer === 0)
+      setAutoTimer(10); {
       const moveNext = async () => {
         const sessionRef = doc(db, "sessions", sessionId);
         const nextQuestion = currentQuestion + 1;

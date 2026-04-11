@@ -27,14 +27,31 @@ export default function GamePage() {
   const { width, height } = useWindowSize();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+<<<<<<< HEAD
   const sessionId =
   typeof window !== "undefined"
     ? getSessionFromUrl() || sessionStorage.getItem("hostSessionId")
     : null;
   console.log("GAME sessionId:", sessionId);
+=======
+ const [sessionId, setSessionId] = useState<string | null>(null);
+
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  const params = new URLSearchParams(window.location.search);
+  const session = params.get("session");
+
+  if (session) {
+    setSessionId(session);
+    sessionStorage.setItem("sessionId", session);
+  }
+}, []);
+>>>>>>> 948c0cf (fix quiz bug)
 
   "use client";
 
+<<<<<<< HEAD
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../lib/firebase";
 import { doc, onSnapshot, runTransaction, collection } from "firebase/firestore";
@@ -58,6 +75,29 @@ const { width, height } = useWindowSize();
 const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
 // ✅ Взимаме sessionId от URL или storage
+=======
+  // 🔥 Live listener
+  useEffect(() => {
+  if (!sessionId) return;
+
+  const sessionRef = doc(db, "sessions", sessionId);
+
+  const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
+    const data = snapshot.data();
+    console.log("SESSION DATA:", data);
+    if (!data) return;
+
+    setStatus(data.status);
+
+    const newIndex = data.currentQuestion || 0;
+
+    setQuestions(data.questions || []);
+    setCurrentIndex(newIndex);
+  });
+
+  return () => unsubscribe();
+}, [sessionId]);
+>>>>>>> 948c0cf (fix quiz bug)
 useEffect(() => {
 if (typeof window === "undefined") return;
 
@@ -83,6 +123,7 @@ useEffect(() => {
 console.log("FINAL sessionId:", sessionId);
 }, [sessionId]);
 
+<<<<<<< HEAD
 // 🔐 participantId
 useEffect(() => {
 if (typeof window !== "undefined") {
@@ -104,6 +145,41 @@ const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
   setStatus(data.status);
 
   if (data.status === "finished") return;
+=======
+  // 🔄 Таймер за играчите (само визуален)
+   useEffect(() => {
+  if (!questions || questions.length === 0) return;
+
+  const newQuestion = questions[currentIndex];
+  console.log("QUESTIONS:", questions);
+  console.log("INDEX:", currentIndex);
+  console.log("NEW QUESTION:", newQuestion);
+
+  if (!newQuestion) return;
+
+  setQuestion(newQuestion);
+  setSelected(null);
+  setShowCorrect(false);
+  setTimer(10);
+
+  if (intervalRef.current) clearInterval(intervalRef.current);
+
+  intervalRef.current = setInterval(() => {
+    setTimer((prev) => {
+      if (prev <= 1) {
+        clearInterval(intervalRef.current!);
+        setShowCorrect(true);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+}, [currentIndex, questions]);
+>>>>>>> 948c0cf (fix quiz bug)
 
   if (data.questions) {
     const newIndex = data.currentQuestion || 0;

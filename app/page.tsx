@@ -75,7 +75,6 @@ const contentStyle: React.CSSProperties = {
   padding: "20px",
   marginTop: "40px"
 };
-
 const buttonStyle: React.CSSProperties = {
   marginTop: "40px",
   padding: "15px 40px",

@@ -23,6 +23,7 @@ export default function GamePage() {
   const [participants, setParticipants] = useState<any[]>([]);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [showPoint, setShowPoint] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -164,11 +165,14 @@ export default function GamePage() {
         console.log("CORRECT:", currentQ.correctIndex);
 
         if (index === currentQ.correctIndex) {
-          newScore += 1;
-          console.log("✅ ВЯРНО");
-        } else {
-          console.log("❌ ГРЕШНО");
-        }
+  newScore += 1;
+
+  setShowPoint(true);
+
+  setTimeout(() => {
+    setShowPoint(false);
+  }, 800);
+}
 
         transaction.update(participantRef, {
           score: newScore,
@@ -228,6 +232,28 @@ export default function GamePage() {
   return (
     <main style={mainStyle} onClick={() => setHasInteracted(true)}>
       <h2>⏳ {timer}</h2>
+      <AnimatePresence>
+  {showPoint && (
+    <motion.div
+      initial={{ opacity: 0, y: 0, scale: 0.5 }}
+      animate={{ opacity: 1, y: -40, scale: 1.5 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
+      style={{
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  fontSize: "3rem",
+  color: "#00ff88",
+  fontWeight: "bold",
+  textShadow: "0 0 20px #00ff88",
+}}
+    >
+      +1
+    </motion.div>
+  )}
+</AnimatePresence>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -290,6 +316,7 @@ const mainStyle: React.CSSProperties = {
   justifyContent: "center",
   padding: "20px",
   textAlign: "center",
+  position: "relative", // ✅ само това е нужно
 };
 
 const gridStyle: React.CSSProperties = {

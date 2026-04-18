@@ -22,6 +22,10 @@ export default function QuizPage() {
   const [autoTimer, setAutoTimer] = useState(10);
   const [question, setQuestion] = useState<any>(null);
 
+  // 🎯 animation
+  const [lastJoined, setLastJoined] = useState<string | null>(null);
+  const [prevCount, setPrevCount] = useState(0);
+
   const answeredCount = participants.filter(
     (p) => p.answeredQuestionIndex === currentQuestion
   ).length;
@@ -37,70 +41,81 @@ export default function QuizPage() {
     const id = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     await setDoc(doc(db, "sessions", id), {
-  createdAt: new Date(),
-  status: "waiting",
-  currentQuestion: 0,
-  questions: []
-});
+      status: "waiting",
+      currentQuestion: 0,
+      questions: []
+    });
 
     sessionStorage.setItem("hostSessionId", id);
     setSessionId(id);
   };
 
-  // session listener
+  // 🔥 session listener
   useEffect(() => {
-  if (!sessionId) return;
+    if (!sessionId) return;
 
-  const ref = collection(db, "sessions", sessionId, "participants");
+    const ref = doc(db, "sessions", sessionId);
 
-  const unsubscribe = onSnapshot(ref, (snap) => {
-    const list: any[] = [];
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      const data = snap.data();
+      if (!data) return;
 
-    snap.forEach((d) => {
-      list.push({
-        id: d.id,
-        score: d.data().score || 0,
-        ...d.data()
-      });
+      setStatus(data.status);
+
+      if (data.currentQuestion !== undefined) {
+        setCurrentQuestion(data.currentQuestion);
+        setQuestion(data.questions?.[data.currentQuestion]);
+      }
     });
 
-    setParticipants(list);
-  });
+    return () => unsubscribe();
+  }, [sessionId]);
 
-  return () => unsubscribe();
-}, [sessionId]);
-
-  // participants
+  // 🔥 participants + SOUND + ANIMATION
   useEffect(() => {
-  if (!sessionId) return;
+    if (!sessionId) return;
 
-  const ref = collection(db, "sessions", sessionId, "participants");
+    const ref = collection(db, "sessions", sessionId, "participants");
 
-  const unsubscribe = onSnapshot(ref, (snap) => {
-    const list: any[] = [];
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      const list: any[] = [];
 
-    snap.forEach((d) => {
-      list.push({
-        id: d.id,
-        score: d.data().score || 0,
-        ...d.data()
+      snap.forEach((d) => {
+        list.push({
+          id: d.id,
+          score: d.data().score || 0,
+          ...d.data()
+        });
       });
+
+      // 🎯 нов участник
+      if (list.length > prevCount) {
+        const newPlayer = list[list.length - 1];
+
+        setLastJoined(newPlayer.name);
+
+        // 🔊 звук
+        const audio = new Audio("/join.mp3");
+        audio.play().catch(() => {});
+
+        setTimeout(() => setLastJoined(null), 2500);
+      }
+
+      setPrevCount(list.length);
+      setParticipants(list);
     });
 
-    setParticipants(list);
-  });
-
-  return () => unsubscribe();
-}, [sessionId]);
+    return () => unsubscribe();
+  }, [sessionId, prevCount]);
 
   // start game
   const startGame = async () => {
     if (!sessionId) return;
 
     const selected = questions.slice(0, 5).map((q) => ({
-  question: q.question,
-  options: q.options
-}));
+      question: q.question,
+      options: q.options
+    }));
 
     await updateDoc(doc(db, "sessions", sessionId), {
       status: "in_progress",
@@ -140,10 +155,10 @@ export default function QuizPage() {
         });
       }
     }
-  }, [autoTimer, sessionId, status, currentQuestion]);
+  }, [autoTimer]);
 
   const sorted = [...participants].sort(
-    (a, b) => b.score - a.score
+    (a, b) => (b.score || 0) - (a.score || 0)
   );
 
   return (
@@ -152,49 +167,40 @@ export default function QuizPage() {
 
       {!sessionId ? (
         <button onClick={generateSession} style={btn}>
-          Старт
+          🚀 Старт
         </button>
       ) : (
         <>
           <h2 style={{ fontSize: "3rem" }}>{sessionId}</h2>
 
+          {/* QR */}
           {status === "waiting" && (
-            <>
-              <QRCodeSVG
-                value={`${window.location.origin}/join?session=${sessionId}`}
-                size={220}
-              />
-
-              <p>Участници: {participants.length}</p>
-
-              {participants.map((p) => (
-                <p key={p.id}>{p.name}</p>
-              ))}
-
-              {participants.length > 0 && (
-                <button
-  onClick={generateSession}
-  style={{
-    marginTop: 25,
-    padding: "15px 25px",
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    background: "#00ff88",
-    color: "#003300",
-    borderRadius: "8px",
-    border: "none",
-    cursor: "pointer"
-  }}
->
-  🚀 Старт
-</button>
-              )}
-            </>
+            <QRCodeSVG
+              value={`${window.location.origin}/join?session=${sessionId}`}
+              size={220}
+            />
           )}
 
+          {/* 🎯 JOIN ANIMATION */}
+          {lastJoined && (
+            <div style={joinBox}>
+              👤 {lastJoined} се присъедини!
+            </div>
+          )}
+
+          <p>Участници: {participants.length}</p>
+
+          {/* START */}
+          {participants.length > 0 && status === "waiting" && (
+            <button onClick={startGame} style={btn}>
+              ▶️ Започни играта
+            </button>
+          )}
+
+          {/* QUESTION */}
           {status === "in_progress" && question && (
             <>
-              <h2 style={questionStyle}>
+              <h2 style={{ fontSize: "2rem" }}>
                 {question.question}
               </h2>
 
@@ -203,22 +209,40 @@ export default function QuizPage() {
                   {o}
                 </div>
               ))}
+            </>
+          )}
 
+          {/* TIMER */}
+          {status === "in_progress" && (
+            <>
               <p>⏳ {autoTimer}</p>
               <p>Въпрос {currentQuestion + 1}/5</p>
               <p>Отговорили: {answeredCount}</p>
             </>
           )}
 
+          {/* LEADERBOARD */}
+          {status === "in_progress" && autoTimer === 0 && (
+            <div>
+              <h3>🏆 Временно класиране</h3>
+              {sorted.slice(0, 5).map((p, i) => (
+                <p key={p.id}>
+                  #{i + 1} {p.name} – {p.score || 0}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* FINAL */}
           {status === "finished" && (
-            <>
+            <div>
               <h2 style={{ color: "gold" }}>
                 🏆 Крайно класиране
               </h2>
 
               {sorted.map((p, i) => (
                 <div key={p.id} style={rank}>
-                  #{i + 1} {p.name} – {p.score}
+                  #{i + 1} {p.name} – {p.score || 0}
                 </div>
               ))}
 
@@ -231,13 +255,27 @@ export default function QuizPage() {
               >
                 🔄 Нова игра
               </button>
-            </>
+            </div>
           )}
         </>
       )}
+
+      {/* 🎯 animation css */}
+      <style>
+        {`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(10px); }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-10px); }
+        }
+      `}
+      </style>
     </main>
   );
 }
+
+/* STYLES */
 
 const mainStyle: CSSProperties = {
   background: "#001a0d",
@@ -247,14 +285,16 @@ const mainStyle: CSSProperties = {
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  textAlign: "center",
-  gap: "10px"
+  gap: "10px",
+  textAlign: "center"
 };
 
 const btn: CSSProperties = {
+  marginTop: 20,
   padding: "15px 30px",
   fontSize: "1.2rem",
   background: "#00ff88",
+  color: "#003300",
   border: "none",
   borderRadius: "10px",
   cursor: "pointer"
@@ -275,8 +315,12 @@ const rank: CSSProperties = {
   borderRadius: 8
 };
 
-const questionStyle: CSSProperties = {
-  fontSize: "2rem",
+const joinBox: CSSProperties = {
   marginTop: 20,
-  maxWidth: "600px"
+  padding: "12px 20px",
+  background: "#00ff88",
+  color: "#003300",
+  borderRadius: "10px",
+  fontWeight: "bold",
+  animation: "fadeInOut 2.5s ease"
 };

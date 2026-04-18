@@ -178,7 +178,7 @@ export default function QuizPage() {
             {sessionId}
           </h2>
 
-          {status === "waiting" && (
+          {sessionId && (
             <div style={{ marginTop: 20 }}>
               <QRCodeSVG
                 value={`${window.location.origin}/join?session=${sessionId}`}
@@ -224,6 +224,23 @@ export default function QuizPage() {
               <h2 style={{ fontSize: "2rem", color: "#FFD700" }}>
                 🏆 Край на играта
               </h2>
+            <button
+      onClick={() => {
+        sessionStorage.removeItem("hostSessionId");
+        setSessionId(null);
+      }}
+      style={{
+        marginTop: 20,
+        padding: "12px 25px",
+        borderRadius: "8px",
+        background: "#00ff88",
+        border: "none",
+        cursor: "pointer",
+        fontWeight: "bold"
+      }}
+    >
+      🔄 Нова игра
+    </button>
             </div>
           )}
         </>

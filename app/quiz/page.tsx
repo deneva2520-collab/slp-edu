@@ -164,33 +164,33 @@ export default function QuizPage() {
     }
   }, [autoTimer, sessionId, status]);
 
-  return (
-    <main style={mainStyle}>
-      <h1 style={{ fontSize: "2.5rem" }}>Host Control Panel</h1>
+ return (
+  <main style={mainStyle}>
+    <h1 style={{ fontSize: "2.5rem" }}>Host Control Panel</h1>
 
-      {!sessionId ? (
-        <button onClick={generateSession} disabled={loading}>
-          {loading ? "..." : "Старт"}
-        </button>
-      ) : (
-        <>
-          <h2 style={{ fontSize: "3rem", letterSpacing: "6px" }}>
-            {sessionId}
-          </h2>
+    {!sessionId ? (
+      <button onClick={generateSession} disabled={loading}>
+        {loading ? "..." : "Старт"}
+      </button>
+    ) : (
+      <>
+        {/* ✅ Session ID */}
+        <h2 style={{ fontSize: "3rem", letterSpacing: "6px" }}>
+          {sessionId}
+        </h2>
 
-          {sessionId && (
-            <div style={{ marginTop: 20 }}>
-              <QRCodeSVG
-                value={`${window.location.origin}/join?session=${sessionId}`}
-                size={200}
-              />
+        {/* ✅ QR (САМО ЕДИН!) */}
+        <div style={{ marginTop: 20 }}>
+          <QRCodeSVG
+            value={`${window.location.origin}/join?session=${sessionId}`}
+            size={220}
+          />
+        </div>
 
               {participants.length > 0 && (
                 <button onClick={startGame} style={{ marginTop: 20 }}>
                   ▶️ Започни играта
                 </button>
-              )}
-            </div>
           )}
 
           {status === "in_progress" && question && (

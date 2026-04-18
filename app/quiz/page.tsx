@@ -205,11 +205,14 @@ export default function QuizPage() {
       ) : (
         <>
           <h2>{sessionId}</h2>
-
-          <QRCodeSVG
-            value={`${window.location.origin}/join?session=${sessionId}`}
-            size={200}
-          />
+{sessionId && (
+  <div style={{ marginTop: 20 }}>
+    <QRCodeSVG
+      value={`${window.location.origin}/join?session=${sessionId}`}
+      size={200}
+    />
+  </div>
+)}
 
           {/* ✅ ВЪПРОС (FIXED POSITION) */}
           {status === "in_progress" && question && (

@@ -23,6 +23,23 @@ export default function JoinPage() {
   const [error, setError] = useState("");
   const [joined, setJoined] = useState(false);
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+  if (!joined || !sessionId) return;
+
+  const sessionRef = doc(db, "sessions", sessionId.toUpperCase());
+
+  const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
+    const data = snapshot.data();
+
+    console.log("JOIN LISTENER:", data);
+
+    if (data?.status === "in_progress") {
+      router.push("/game");
+    }
+  });
+
+  return () => unsubscribe();
+}, [joined, sessionId]);
   const searchParams = useSearchParams();
   const sessionParam = searchParams.get("session");
   useEffect(() => {
@@ -98,13 +115,6 @@ export default function JoinPage() {
       sessionStorage.setItem("sessionId", sessionId.toUpperCase());
 
       setJoined(true);
-
-      onSnapshot(sessionRef, (snapshot) => {
-        const data = snapshot.data();
-        if (data?.status === "in_progress") {
-          router.push("/game");
-        }
-      });
 
     } catch (err) {
       console.error(err);

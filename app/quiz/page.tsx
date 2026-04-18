@@ -21,37 +21,44 @@ export default function QuizPage() {
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [autoTimer, setAutoTimer] = useState(20);
+
   const answeredCount = participants.filter(
-  (p) => p.answeredQuestionIndex === currentQuestion
-).length;
-const sortedParticipants = [...participants].sort(
-  (a, b) => b.score - a.score
-);
+    (p) => p.answeredQuestionIndex === currentQuestion
+  ).length;
 
-const highestScore = sortedParticipants[0]?.score ?? 0;
-const lowestScore =
-  sortedParticipants[sortedParticipants.length - 1]?.score ?? 0;
+  const sortedParticipants = [...participants].sort(
+    (a, b) => b.score - a.score
+  );
 
-const averageScore =
-  participants.length > 0
-    ? (
-        participants.reduce((sum, p) => sum + p.score, 0) /
-        participants.length
-      ).toFixed(2)
-    : 0;
+  // ✅ NEW (за Kahoot view)
+  const [questionsState, setQuestions] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [question, setQuestion] = useState<any>(null);
 
-const maxPossiblePoints = 5;
+  const highestScore = sortedParticipants[0]?.score ?? 0;
+  const lowestScore =
+    sortedParticipants[sortedParticipants.length - 1]?.score ?? 0;
 
-const successRate =
-  participants.length > 0
-    ? (
-        (participants.reduce((sum, p) => sum + p.score, 0) /
-          (participants.length * maxPossiblePoints)) *
-        100
-      ).toFixed(1)
-    : 0;
+  const averageScore =
+    participants.length > 0
+      ? (
+          participants.reduce((sum, p) => sum + p.score, 0) /
+          participants.length
+        ).toFixed(2)
+      : 0;
 
-  // ✅ Възстановяване на Host session при refresh
+  const maxPossiblePoints = 5;
+
+  const successRate =
+    participants.length > 0
+      ? (
+          (participants.reduce((sum, p) => sum + p.score, 0) /
+            (participants.length * maxPossiblePoints)) *
+          100
+        ).toFixed(1)
+      : 0;
+
+  // ✅ restore session
   useEffect(() => {
     const saved = sessionStorage.getItem("hostSessionId");
     if (saved) {
@@ -59,7 +66,7 @@ const successRate =
     }
   }, []);
 
-  // 🔹 Създаване на нова сесия
+  // 🔹 create session
   const generateSession = async () => {
     setLoading(true);
 
@@ -71,14 +78,13 @@ const successRate =
       participants: []
     });
 
-    // ✅ Запазваме за Host
     sessionStorage.setItem("hostSessionId", id);
 
     setSessionId(id);
     setLoading(false);
   };
 
-  // 🔥 Live listener
+  // 🔥 LIVE SESSION (ВАЖНО – тук добавихме въпросите)
   useEffect(() => {
     if (!sessionId) return;
 
@@ -88,45 +94,49 @@ const successRate =
       const data = snapshot.data();
       if (!data) return;
 
-      console.log("Host session:", sessionId);
-      console.log("Host data:", data);
-
       setStatus(data.status);
-    
+
       if (data.currentQuestion !== undefined) {
         setCurrentQuestion(data.currentQuestion);
       }
+
+      // ✅ NEW – sync questions
+      setQuestions(data.questions || []);
+      setCurrentIndex(data.currentQuestion || 0);
+
+      const q = data.questions?.[data.currentQuestion];
+      setQuestion(q);
     });
 
     return () => unsubscribe();
   }, [sessionId]);
 
-  // 🔹 Стартиране на състезанието
+  // 🔹 participants listener
   useEffect(() => {
-  if (!sessionId) return;
+    if (!sessionId) return;
 
-  const participantsRef = collection(
-    db,
-    "sessions",
-    sessionId,
-    "participants"
-  );
+    const participantsRef = collection(
+      db,
+      "sessions",
+      sessionId,
+      "participants"
+    );
 
-  const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
-    const players: any[] = [];
+    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
+      const players: any[] = [];
 
-    snapshot.forEach((doc) => {
-      players.push({
-        id: doc.id,
-        ...doc.data(),
+      snapshot.forEach((doc) => {
+        players.push({
+          id: doc.id,
+          ...doc.data(),
+        });
       });
+
+      setParticipants(players);
     });
 
-    setParticipants(players);
-  });
-
-  return () => unsubscribe();
-}, [sessionId]);
+    return () => unsubscribe();
+  }, [sessionId]);
 
   const startGame = async () => {
     if (!sessionId) return;
@@ -157,229 +167,104 @@ const successRate =
     setAutoTimer(10);
   };
 
-  // ✅ Host таймер
+  // timer
   useEffect(() => {
-  if (status !== "in_progress") return;
+    if (status !== "in_progress") return;
 
-  const interval = setInterval(() => {
-    setAutoTimer((prev) => (prev <= 1 ? 0 : prev - 1));
-  }, 1000);
+    const interval = setInterval(() => {
+      setAutoTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, [status]);
+    return () => clearInterval(interval);
+  }, [status]);
 
-  // ✅ Смяна на въпросите (само Host)
- useEffect(() => {
-  if (!sessionId || status !== "in_progress") return;
+  // auto next question
+  useEffect(() => {
+    if (!sessionId || status !== "in_progress") return;
 
-  if (autoTimer === 0) {
-    const moveNext = async () => {
-      const sessionRef = doc(db, "sessions", sessionId);
-      const nextQuestion = currentQuestion + 1;
+    if (autoTimer === 0) {
+      const moveNext = async () => {
+        const sessionRef = doc(db, "sessions", sessionId);
+        const nextQuestion = currentQuestion + 1;
 
-      if (nextQuestion < 5) {
-        await updateDoc(sessionRef, {
-          currentQuestion: nextQuestion,
-        });
-        setCurrentQuestion(nextQuestion);
-        setAutoTimer(10); // reset таймера
-      } else {
-        await updateDoc(sessionRef, {
-          status: "finished",
-        });
-      }
-    };
+        if (nextQuestion < 5) {
+          await updateDoc(sessionRef, {
+            currentQuestion: nextQuestion,
+          });
+          setCurrentQuestion(nextQuestion);
+          setAutoTimer(10);
+        } else {
+          await updateDoc(sessionRef, {
+            status: "finished",
+          });
+        }
+      };
 
-    moveNext();
-  }
-}, [autoTimer, sessionId, status]);
+      moveNext();
+    }
+  }, [autoTimer, sessionId, status]);
 
   return (
-  <main style={mainStyle}>
-
-  <style>
-  {`
-  @keyframes participantPop {
-    0% { transform: scale(0.8); opacity: 0; }
-    60% { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  `}
-  </style>
+    <main style={mainStyle}>
       <h1 style={{ fontSize: "2.5rem" }}>
         Host Control Panel
       </h1>
 
       {!sessionId ? (
-        <button
-          onClick={generateSession}
-          disabled={loading}
-          style={buttonStyle}
-        >
+        <button onClick={generateSession} disabled={loading} style={buttonStyle}>
           {loading ? "Създаване..." : "Стартирай състезание"}
         </button>
       ) : (
         <>
-          <p style={{ fontSize: "1.2rem" }}>
-            Session ID:
-          </p>
+          <h2 style={{ fontSize: "3rem" }}>{sessionId}</h2>
 
-          <h2
-            style={{
-              fontSize: "3rem",
-              letterSpacing: "6px"
-            }}
-          >
-            {sessionId}
-          </h2>
-      <div style={{
-  marginTop: "25px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center"
-}}>
+          {/* ✅ QUESTION VIEW (НОВО) */}
+          {status === "in_progress" && question && (
+            <div style={{ marginTop: 30 }}>
+              <h2>{question.text}</h2>
 
-<p style={{
-  fontSize: "20px",
-  marginBottom: "15px",
-  fontWeight: "bold"
-}}>
-📱 Сканирай QR кода и се включи в състезанието
-</p>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+                maxWidth: "500px",
+                margin: "20px auto"
+              }}>
+                {question.options.map((opt: string, i: number) => (
+                  <div key={i} style={{
+                    padding: "15px",
+                    borderRadius: "10px",
+                    background: "#00ff88",
+                    color: "#003300",
+                    fontWeight: "bold"
+                  }}>
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-<div style={{
-  animation: "qrPulse 2s infinite",
-  display: "inline-block"
-}}>
-  <QRCodeSVG
-    value={`${window.location.origin}/join?session=${sessionId}`}
-    size={260}
-    bgColor={"#ffffff"}
-    fgColor={"#000000"}
-  />
-</div>
-  </div>
-          {status !== "finished" && (
-  <>
-    <h3 style={{ marginTop: "30px" }}>
-      Участници: {participants.length} / 10
-    </h3>
-
-    <div style={{ marginTop: "15px" }}>
-      {participants.map((p, index) => (
-        <p key={index}>
-          • {p.name} ({p.score})
-        </p>
-      ))}
-    </div>
-  </>
-)}
-          {/* ✅ Бутонът за старт */}
+          {/* START */}
           {participants.length > 0 && status === "waiting" && (
-            <button
-              onClick={startGame}
-              style={startButtonStyle}
-            >
+            <button onClick={startGame} style={startButtonStyle}>
               Започни състезание
             </button>
           )}
-          
+
+          {/* TIMER */}
           {status === "in_progress" && (
-  <>
-    <h2 style={{ marginTop: "20px", color: "yellow" }}>
-      Състезанието започна!
-    </h2>
+            <>
+              <h3>⏳ {autoTimer}</h3>
+              <h3>Въпрос {currentQuestion + 1} / 5</h3>
+              <h3>Отговорили: {answeredCount}</h3>
+            </>
+          )}
 
-    <h3>⏳ Таймер: {autoTimer}</h3>
-    <h3>Въпрос: {currentQuestion + 1} / 5</h3>
-
-    <h3 style={{ marginTop: "10px", color: "#FFD700" }}>
-      📊 Отговорили: {answeredCount} / {participants.length}
-    </h3>
-  </>
-)}
-
+          {/* FINISH */}
           {status === "finished" && (
-  <>
-    <div style={{ marginTop: "60px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <h2 style={{ fontSize: "48px", marginBottom: "30px" }}>
-        🏆 КРАЙНО КЛАСИРАНЕ
-      </h2>
-
-      {participants
-        .slice()
-        .sort((a, b) => b.score - a.score)
-        .map((player, index) => (
-          <div
-            key={player.id}
-            style={{
-              animation: "participantPop 0.4s ease",
-              margin: "15px",
-              padding: "20px",
-              borderRadius: "14px",
-              width: "500px",
-              fontSize: "28px",
-              fontWeight: "bold",
-              background:
-                index === 0
-                  ? "linear-gradient(135deg, #FFD700, #ffcc00)"
-                  : index === 1
-                  ? "#C0C0C0"
-                  : index === 2
-                  ? "#CD7F32"
-                  : "#002b15",
-              color: index < 3 ? "#000" : "#00ff88"
-            }}
-          >
-            #{index + 1} – {player.name} ({player.score} т.)
-          </div>
-        ))}
-    </div>
-
-    <h2 style={{ marginTop: "40px", fontSize: "36px", color: "#00ff88" }}>
-      🎉 Благодарим за участието!
-    </h2>
-
-    <button
-      onClick={() => {
-        sessionStorage.removeItem("hostSessionId");
-        setSessionId(null);
-      }}
-      style={{
-        marginTop: "30px",
-        padding: "15px 30px",
-        fontSize: "1.1rem",
-        fontWeight: "bold",
-        backgroundColor: "#00ff88",
-        color: "#003d1a",
-        border: "none",
-        borderRadius: "10px",
-        cursor: "pointer"
-      }}
-    >
-      Стартирай ново състезание
-    </button>
-
-    {/* 📊 Статистика */}
-    <div style={{
-      marginTop: "50px",
-      padding: "25px",
-      borderRadius: "14px",
-      width: "500px",
-      background: "#001a0d",
-      border: "1px solid #00ff88"
-    }}>
-      <h3 style={{ marginBottom: "15px", fontSize: "24px" }}>
-        📊 Статистика
-      </h3>
-
-      <p>🥇 Най-висок резултат: {highestScore} т.</p>
-      <p>📉 Най-нисък резултат: {lowestScore} т.</p>
-      <p>📊 Среден резултат: {averageScore} т.</p>
-      <p>📈 Успеваемост: {successRate}%</p>
-    </div>
-  </>
-)}
+            <h2>🏆 КРАЙ</h2>
+          )}
         </>
       )}
     </main>
@@ -394,29 +279,15 @@ const mainStyle: React.CSSProperties = {
   justifyContent: "center",
   flexDirection: "column",
   color: "#00ff88",
-  gap: "15px",
-  padding: "20px",
-  textAlign: "center"
 };
 
 const buttonStyle: React.CSSProperties = {
-  padding: "15px 30px",
-  fontSize: "1.2rem",
-  fontWeight: "600",
-  backgroundColor: "#00ff88",
-  color: "#003d1a",
+  padding: "15px",
+  background: "#00ff88",
   border: "none",
-  borderRadius: "10px",
-  cursor: "pointer"
 };
 
 const startButtonStyle: React.CSSProperties = {
-  marginTop: "30px",
-  padding: "12px 25px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#00ff88",
-  color: "#003d1a",
-  fontWeight: "bold",
-  cursor: "pointer"
+  marginTop: "20px",
+  padding: "10px",
 };

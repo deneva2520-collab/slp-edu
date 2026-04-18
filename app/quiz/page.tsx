@@ -20,39 +20,11 @@ export default function QuizPage() {
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [autoTimer, setAutoTimer] = useState(20);
-
   const [question, setQuestion] = useState<any>(null);
 
   const answeredCount = participants.filter(
     (p) => p.answeredQuestionIndex === currentQuestion
   ).length;
-
-  const sortedParticipants = [...participants].sort(
-    (a, b) => b.score - a.score
-  );
-
-  const highestScore = sortedParticipants[0]?.score ?? 0;
-  const lowestScore =
-    sortedParticipants[sortedParticipants.length - 1]?.score ?? 0;
-
-  const averageScore =
-    participants.length > 0
-      ? (
-          participants.reduce((sum, p) => sum + p.score, 0) /
-          participants.length
-        ).toFixed(2)
-      : 0;
-
-  const maxPossiblePoints = 5;
-
-  const successRate =
-    participants.length > 0
-      ? (
-          (participants.reduce((sum, p) => sum + p.score, 0) /
-            (participants.length * maxPossiblePoints)) *
-          100
-        ).toFixed(1)
-      : 0;
 
   // restore session
   useEffect(() => {
@@ -77,7 +49,7 @@ export default function QuizPage() {
     setLoading(false);
   };
 
-  // 🔥 MAIN LISTENER (FIXED)
+  // main listener
   useEffect(() => {
     if (!sessionId) return;
 
@@ -91,8 +63,6 @@ export default function QuizPage() {
 
       if (data.currentQuestion !== undefined) {
         setCurrentQuestion(data.currentQuestion);
-
-        // ✅ FIX – правилно взимаме въпроса
         const q = data.questions?.[data.currentQuestion];
         setQuestion(q);
       }
@@ -196,7 +166,7 @@ export default function QuizPage() {
 
   return (
     <main style={mainStyle}>
-      <h1>Host Control Panel</h1>
+      <h1 style={{ fontSize: "2.5rem" }}>Host Control Panel</h1>
 
       {!sessionId ? (
         <button onClick={generateSession} disabled={loading}>
@@ -204,18 +174,25 @@ export default function QuizPage() {
         </button>
       ) : (
         <>
-          <h2>{sessionId}</h2>
+          <h2 style={{ fontSize: "3rem", letterSpacing: "6px" }}>
+            {sessionId}
+          </h2>
 
-{status === "waiting" && (
-  <div style={{ marginTop: 20 }}>
-    <QRCodeSVG
-      value={`${window.location.origin}/join?session=${sessionId}`}
-      size={200}
-    />
-  </div>
-)}
+          {status === "waiting" && (
+            <div style={{ marginTop: 20 }}>
+              <QRCodeSVG
+                value={`${window.location.origin}/join?session=${sessionId}`}
+                size={200}
+              />
 
-          {/* ✅ ВЪПРОС (FIXED POSITION) */}
+              {participants.length > 0 && (
+                <button onClick={startGame} style={{ marginTop: 20 }}>
+                  ▶️ Започни играта
+                </button>
+              )}
+            </div>
+          )}
+
           {status === "in_progress" && question && (
             <div style={{ marginTop: 30 }}>
               <h2>{question.text}</h2>
@@ -235,15 +212,19 @@ export default function QuizPage() {
           )}
 
           {status === "in_progress" && (
-            <>
+            <div>
               <p>⏳ {autoTimer}</p>
               <p>Въпрос {currentQuestion + 1}/5</p>
               <p>Отговорили: {answeredCount}</p>
-            </>
+            </div>
           )}
 
           {status === "finished" && (
-            <h2>🏆 Край</h2>
+            <div style={{ marginTop: 30 }}>
+              <h2 style={{ fontSize: "2rem", color: "#FFD700" }}>
+                🏆 Край на играта
+              </h2>
+            </div>
           )}
         </>
       )}
@@ -251,6 +232,7 @@ export default function QuizPage() {
   );
 }
 
+// ✅ ТУК трябва да е (извън компонента)
 const mainStyle: React.CSSProperties = {
   background: "#001a0d",
   color: "#00ff88",

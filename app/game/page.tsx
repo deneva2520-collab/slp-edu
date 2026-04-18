@@ -93,17 +93,15 @@ export default function GamePage() {
     return () => unsubscribe();
   }, [sessionId]);
 
-  // въпрос + таймер + звук
+  // въпрос + таймер
   useEffect(() => {
     if (status === "finished") return;
-    if (!questions || questions.length === 0) return;
+    if (!questions.length) return;
 
     const newQuestion = questions[currentIndex];
     if (!newQuestion) return;
 
-    if (hasInteracted) {
-      sounds.start.play();
-    }
+    if (hasInteracted) sounds.start.play();
 
     setQuestion(newQuestion);
     setSelected(null);
@@ -126,14 +124,14 @@ export default function GamePage() {
     };
   }, [currentIndex, questions, status]);
 
-  // отговор
+  // 🔥 ОТГОВОР (FIXED)
   const handleSelect = async (index: number) => {
     if (selected !== null || status === "finished") return;
 
     setSelected(index);
     sounds.select.play();
 
-    if (!sessionId || !participantId || !question) return;
+    if (!sessionId || !participantId) return;
 
     const participantRef = doc(
       db,
@@ -143,19 +141,33 @@ export default function GamePage() {
       participantId
     );
 
+    const sessionRef = doc(db, "sessions", sessionId);
+
     try {
       await runTransaction(db, async (transaction) => {
-        const snap = await transaction.get(participantRef);
-        if (!snap.exists()) return;
+        const sessionSnap = await transaction.get(sessionRef);
+        const participantSnap = await transaction.get(participantRef);
 
-        const data = snap.data();
+        if (!sessionSnap.exists() || !participantSnap.exists()) return;
 
-        if (data.answeredQuestionIndex === currentIndex) return;
+        const sessionData = sessionSnap.data();
+        const participantData = participantSnap.data();
 
-        let newScore = data.score;
+        // защита от двойно отговаряне
+        if (participantData.answeredQuestionIndex === currentIndex) return;
 
-        if (index === question.correctIndex) {
+        const currentQ = sessionData.questions[currentIndex];
+
+        let newScore = participantData.score || 0;
+
+        console.log("SELECTED:", index);
+        console.log("CORRECT:", currentQ.correctIndex);
+
+        if (index === currentQ.correctIndex) {
           newScore += 1;
+          console.log("✅ ВЯРНО");
+        } else {
+          console.log("❌ ГРЕШНО");
         }
 
         transaction.update(participantRef, {
@@ -164,7 +176,7 @@ export default function GamePage() {
         });
       });
     } catch (e) {
-      console.error(e);
+      console.error("TRANSACTION ERROR:", e);
     }
   };
 
@@ -241,24 +253,25 @@ export default function GamePage() {
           }
 
           return (
-           <motion.button
-  key={i}
-  onClick={() => handleSelect(i)}
-  whileTap={{ scale: 0.9 }}
-  animate={{
-    scale: selected === i ? [1, 1.1, 1] : 1,
-  }}
-  transition={{ duration: 0.3 }}
-  style={{
-    ...buttonStyle,
-    boxShadow:
-      selected === i
-        ? "0 0 20px rgba(0,255,136,0.7)"
-        : "0 0 10px rgba(0,255,136,0.2)",
-  }}
->
-  {opt}
-</motion.button>
+            <motion.button
+              key={i}
+              onClick={() => handleSelect(i)}
+              whileTap={{ scale: 0.9 }}
+              animate={{
+                scale: selected === i ? [1, 1.1, 1] : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              style={{
+                ...buttonStyle,
+                background: bg,
+                boxShadow:
+                  selected === i
+                    ? "0 0 20px rgba(0,255,136,0.7)"
+                    : "0 0 10px rgba(0,255,136,0.2)",
+              }}
+            >
+              {opt}
+            </motion.button>
           );
         })}
       </div>

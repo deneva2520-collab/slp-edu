@@ -115,7 +115,7 @@ export default function QuizPage() {
     const selected = questions.slice(0, 5).map((q) => ({
   question: q.question,
   options: q.options,
-  correctIndex: q.correctIndex
+  correctIndex: q.correctIndex //
 }));
 
     await updateDoc(doc(db, "sessions", sessionId), {

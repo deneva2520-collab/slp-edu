@@ -7,19 +7,19 @@ import {
   setDoc,
   onSnapshot,
   updateDoc,
+  collection
 } from "firebase/firestore";
 import { questions } from "../../data/questions";
-import { collection } from "firebase/firestore";
 import { QRCodeSVG } from "qrcode.react";
+import type { CSSProperties } from "react";
 
 export default function QuizPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const [status, setStatus] = useState("waiting");
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [autoTimer, setAutoTimer] = useState(20);
+  const [autoTimer, setAutoTimer] = useState(10);
   const [question, setQuestion] = useState<any>(null);
 
   const answeredCount = participants.filter(
@@ -34,96 +34,79 @@ export default function QuizPage() {
 
   // create session
   const generateSession = async () => {
-    setLoading(true);
-
     const id = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     await setDoc(doc(db, "sessions", id), {
-      createdAt: new Date(),
       status: "waiting",
-      participants: []
+      currentQuestion: 0,
+      questions: []
     });
 
     sessionStorage.setItem("hostSessionId", id);
     setSessionId(id);
-    setLoading(false);
   };
 
-  // main listener
+  // session listener
   useEffect(() => {
-    if (!sessionId) return;
+  if (!sessionId) return;
 
-    const sessionRef = doc(db, "sessions", sessionId);
+  const ref = collection(db, "sessions", sessionId, "participants");
 
-    const unsubscribe = onSnapshot(sessionRef, (snapshot) => {
-      const data = snapshot.data();
-      if (!data) return;
+  const unsubscribe = onSnapshot(ref, (snap) => {
+    const list: any[] = [];
 
-      setStatus(data.status);
-
-      if (data.currentQuestion !== undefined) {
-        setCurrentQuestion(data.currentQuestion);
-        const q = data.questions?.[data.currentQuestion];
-        setQuestion(q);
-      }
+    snap.forEach((d) => {
+      list.push({
+        id: d.id,
+        score: d.data().score || 0,
+        ...d.data()
+      });
     });
 
-    return () => unsubscribe();
-  }, [sessionId]);
+    setParticipants(list);
+  });
+
+  return () => unsubscribe();
+}, [sessionId]);
 
   // participants
   useEffect(() => {
-    if (!sessionId) return;
+  if (!sessionId) return;
 
-    const participantsRef = collection(
-      db,
-      "sessions",
-      sessionId,
-      "participants"
-    );
+  const ref = collection(db, "sessions", sessionId, "participants");
 
-    const unsubscribe = onSnapshot(participantsRef, (snapshot) => {
-      const players: any[] = [];
+  const unsubscribe = onSnapshot(ref, (snap) => {
+    const list: any[] = [];
 
-      snapshot.forEach((doc) => {
-        players.push({
-          id: doc.id,
-          ...doc.data(),
-        });
+    snap.forEach((d) => {
+      list.push({
+        id: d.id,
+        score: d.data().score || 0,
+        ...d.data()
       });
-
-      setParticipants(players);
     });
 
-    return () => unsubscribe();
-  }, [sessionId]);
+    setParticipants(list);
+  });
 
+  return () => unsubscribe();
+}, [sessionId]);
+
+  // start game
   const startGame = async () => {
     if (!sessionId) return;
 
-    const sessionRef = doc(db, "sessions", sessionId);
+    const selected = questions.slice(0, 5).map((q) => ({
+  question: q.question,
+  options: q.options
+}));
 
-    const usedIndexes = new Set<number>();
-    const selectedQuestions = [];
-
-    while (selectedQuestions.length < 5) {
-      const randomIndex = Math.floor(
-        Math.random() * questions.length
-      );
-
-      if (!usedIndexes.has(randomIndex)) {
-        usedIndexes.add(randomIndex);
-        selectedQuestions.push(questions[randomIndex]);
-      }
-    }
-
-    await updateDoc(sessionRef, {
+    await updateDoc(doc(db, "sessions", sessionId), {
       status: "in_progress",
       currentQuestion: 0,
-      questions: selectedQuestions
+      questions: selected
     });
 
-    setCurrentQuestion(0);
     setAutoTimer(10);
   };
 
@@ -132,7 +115,7 @@ export default function QuizPage() {
     if (status !== "in_progress") return;
 
     const interval = setInterval(() => {
-      setAutoTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+      setAutoTimer((t) => (t <= 1 ? 0 : t - 1));
     }, 1000);
 
     return () => clearInterval(interval);
@@ -143,163 +126,143 @@ export default function QuizPage() {
     if (!sessionId || status !== "in_progress") return;
 
     if (autoTimer === 0) {
-      const moveNext = async () => {
-        const sessionRef = doc(db, "sessions", sessionId);
-        const nextQuestion = currentQuestion + 1;
+      const next = currentQuestion + 1;
 
-        if (nextQuestion < 5) {
-          await updateDoc(sessionRef, {
-            currentQuestion: nextQuestion,
-          });
-          setCurrentQuestion(nextQuestion);
-          setAutoTimer(10);
-        } else {
-          await updateDoc(sessionRef, {
-            status: "finished",
-          });
-        }
-      };
-
-      moveNext();
+      if (next < 5) {
+        updateDoc(doc(db, "sessions", sessionId), {
+          currentQuestion: next
+        });
+        setAutoTimer(10);
+      } else {
+        updateDoc(doc(db, "sessions", sessionId), {
+          status: "finished"
+        });
+      }
     }
-  }, [autoTimer, sessionId, status]);
+  }, [autoTimer, sessionId, status, currentQuestion]);
 
- return (
-  <main style={mainStyle}>
-    <h1 style={{ fontSize: "2.5rem" }}>Host Control Panel</h1>
+  const sorted = [...participants].sort(
+    (a, b) => b.score - a.score
+  );
 
-    {!sessionId ? (
-      <button onClick={generateSession} disabled={loading}>
-        {loading ? "..." : "Старт"}
-      </button>
-    ) : (
-      <>
-        {/* ✅ Session ID */}
-        <h2 style={{ fontSize: "3rem", letterSpacing: "6px" }}>
-          {sessionId}
-        </h2>
+  return (
+    <main style={mainStyle}>
+      <h1 style={{ fontSize: "3rem" }}>Host Control Panel</h1>
 
-        {/* ✅ QR (САМО ЕДИН!) */}
-        <div style={{ marginTop: 20 }}>
-          <QRCodeSVG
-            value={`${window.location.origin}/join?session=${sessionId}`}
-            size={220}
-          />
-        </div>
-{participants.length > 0 && (
-  <div style={{ marginTop: 20 }}>
-    <button
-      onClick={startGame}
-      style={{
-        marginTop: 25,
-        padding: "15px 30px",
-        fontSize: "1.2rem",
-        fontWeight: "bold",
-        backgroundColor: "#00ff88",
-        color: "#003d1a",
-        border: "none",
-        borderRadius: "10px",
-        cursor: "pointer"
-      }}
-    >
-      ▶️ Започни играта
-    </button>
-  </div>
-)}
+      {!sessionId ? (
+        <button onClick={generateSession} style={btn}>
+          Старт
+        </button>
+      ) : (
+        <>
+          <h2 style={{ fontSize: "3rem" }}>{sessionId}</h2>
 
-          {status === "in_progress" && question && (
-            <div style={{ marginTop: 30 }}>
-              <h2>{question.text}</h2>
+          {status === "waiting" && (
+            <>
+              <QRCodeSVG
+                value={`${window.location.origin}/join?session=${sessionId}`}
+                size={220}
+              />
 
-              {question.options.map((opt: string, i: number) => (
-                <div key={i} style={{
-                  padding: 10,
-                  margin: 5,
-                  background: "#00ff88",
-                  color: "#003300",
-                  borderRadius: 8
-                }}>
-                  {opt}
-                </div>
+              <p>Участници: {participants.length}</p>
+
+              {participants.map((p) => (
+                <p key={p.id}>{p.name}</p>
               ))}
-            </div>
+
+              {participants.length > 0 && (
+                <button onClick={startGame} style={btn}>
+                  ▶️ Започни играта
+                </button>
+              )}
+            </>
           )}
 
-          {status === "in_progress" && (
-            <div>
+          {status === "in_progress" && question && (
+            <>
+              <h2 style={questionStyle}>
+                {question.question}
+              </h2>
+
+              {question.options.map((o: string, i: number) => (
+                <div key={i} style={option}>
+                  {o}
+                </div>
+              ))}
+
               <p>⏳ {autoTimer}</p>
               <p>Въпрос {currentQuestion + 1}/5</p>
               <p>Отговорили: {answeredCount}</p>
-            </div>
+            </>
           )}
 
-       {status === "finished" && (
-  <div style={{ marginTop: 40, textAlign: "center" }}>
-    <h2 style={{ fontSize: "3rem", color: "#FFD700" }}>
-      🏆 КРАЙНО КЛАСИРАНЕ
-    </h2>
+          {status === "finished" && (
+            <>
+              <h2 style={{ color: "gold" }}>
+                🏆 Крайно класиране
+              </h2>
 
-    {participants
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .map((p, i) => (
-        <div
-          key={p.id}
-          style={{
-            marginTop: 15,
-            padding: "15px",
-            width: "300px",
-            borderRadius: "10px",
-            background:
-              i === 0
-                ? "#FFD700"
-                : i === 1
-                ? "#C0C0C0"
-                : i === 2
-                ? "#CD7F32"
-                : "#002b15",
-            color: i < 3 ? "#000" : "#00ff88",
-            fontSize: "1.3rem",
-            fontWeight: "bold"
-          }}
-        >
-          #{i + 1} – {p.name} ({p.score} т.)
-        </div>
-      ))}
+              {sorted.map((p, i) => (
+                <div key={p.id} style={rank}>
+                  #{i + 1} {p.name} – {p.score}
+                </div>
+              ))}
 
-    <button
-      onClick={() => {
-        sessionStorage.removeItem("hostSessionId");
-        setSessionId(null);
-      }}
-      style={{
-        marginTop: 30,
-        padding: "15px 30px",
-        fontSize: "1.1rem",
-        backgroundColor: "#00ff88",
-        color: "#003d1a",
-        border: "none",
-        borderRadius: "10px",
-        cursor: "pointer"
-      }}
-    >
-      🔄 Нова игра
-    </button>
-  </div>
-)}
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem("hostSessionId");
+                  setSessionId(null);
+                }}
+                style={btn}
+              >
+                🔄 Нова игра
+              </button>
+            </>
+          )}
         </>
       )}
     </main>
   );
 }
 
-// ✅ ТУК трябва да е (извън компонента)
-const mainStyle: React.CSSProperties = {
+const mainStyle: CSSProperties = {
   background: "#001a0d",
   color: "#00ff88",
   minHeight: "100vh",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  justifyContent: "center"
+  justifyContent: "center",
+  textAlign: "center",
+  gap: "10px"
+};
+
+const btn: CSSProperties = {
+  padding: "15px 30px",
+  fontSize: "1.2rem",
+  background: "#00ff88",
+  border: "none",
+  borderRadius: "10px",
+  cursor: "pointer"
+};
+
+const option: CSSProperties = {
+  margin: 5,
+  padding: 10,
+  background: "#00ff88",
+  color: "#003300",
+  borderRadius: 8
+};
+
+const rank: CSSProperties = {
+  marginTop: 10,
+  padding: 10,
+  background: "#002b15",
+  borderRadius: 8
+};
+
+const questionStyle: CSSProperties = {
+  fontSize: "2rem",
+  marginTop: 20,
+  maxWidth: "600px"
 };

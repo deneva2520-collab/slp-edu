@@ -102,7 +102,7 @@ export default function GamePage() {
     if (!newQuestion) return;
 
     if (hasInteracted) {
-      sounds.question.play();
+      sounds.start.play();
     }
 
     setQuestion(newQuestion);
@@ -241,15 +241,24 @@ export default function GamePage() {
           }
 
           return (
-            <motion.button
-              key={i}
-              onClick={() => handleSelect(i)}
-              whileTap={{ scale: 0.95 }}
-              animate={{ backgroundColor: bg }}
-              style={buttonStyle}
-            >
-              {opt}
-            </motion.button>
+           <motion.button
+  key={i}
+  onClick={() => handleSelect(i)}
+  whileTap={{ scale: 0.9 }}
+  animate={{
+    scale: selected === i ? [1, 1.1, 1] : 1,
+  }}
+  transition={{ duration: 0.3 }}
+  style={{
+    ...buttonStyle,
+    boxShadow:
+      selected === i
+        ? "0 0 20px rgba(0,255,136,0.7)"
+        : "0 0 10px rgba(0,255,136,0.2)",
+  }}
+>
+  {opt}
+</motion.button>
           );
         })}
       </div>

@@ -1,12 +1,12 @@
 import { Howl } from "howler";
 
 export const sounds = {
-  question: new Howl({
-    src: ["/sounds/question.mp3"],
-    volume: 0.5,
+  start: new Howl({
+    src: ["/sounds/start.mp3"],
+    volume: 0.6,
   }),
   select: new Howl({
-    src: ["/sounds/question.mp3"], // временно същия звук
-    volume: 0.3,
+    src: ["/sounds/question.mp3"],
+    volume: 0.4,
   }),
 };

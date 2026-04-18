@@ -205,7 +205,8 @@ export default function QuizPage() {
       ) : (
         <>
           <h2>{sessionId}</h2>
-{sessionId && (
+
+{status === "waiting" && (
   <div style={{ marginTop: 20 }}>
     <QRCodeSVG
       value={`${window.location.origin}/join?session=${sessionId}`}

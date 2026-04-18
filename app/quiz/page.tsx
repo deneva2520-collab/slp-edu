@@ -113,9 +113,10 @@ export default function QuizPage() {
     if (!sessionId) return;
 
     const selected = questions.slice(0, 5).map((q) => ({
-      question: q.question,
-      options: q.options
-    }));
+  question: q.question,
+  options: q.options,
+  correctIndex: q.correctIndex
+}));
 
     await updateDoc(doc(db, "sessions", sessionId), {
       status: "in_progress",

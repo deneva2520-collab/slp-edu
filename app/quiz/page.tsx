@@ -7,7 +7,6 @@ import {
   setDoc,
   onSnapshot,
   updateDoc,
-  addDoc
 } from "firebase/firestore";
 import { questions } from "../../data/questions";
 import { collection } from "firebase/firestore";
@@ -22,6 +21,8 @@ export default function QuizPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [autoTimer, setAutoTimer] = useState(20);
 
+  const [question, setQuestion] = useState<any>(null);
+
   const answeredCount = participants.filter(
     (p) => p.answeredQuestionIndex === currentQuestion
   ).length;
@@ -29,11 +30,6 @@ export default function QuizPage() {
   const sortedParticipants = [...participants].sort(
     (a, b) => b.score - a.score
   );
-
-  // ✅ NEW (за Kahoot view)
-  const [questionsState, setQuestions] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [question, setQuestion] = useState<any>(null);
 
   const highestScore = sortedParticipants[0]?.score ?? 0;
   const lowestScore =
@@ -58,15 +54,13 @@ export default function QuizPage() {
         ).toFixed(1)
       : 0;
 
-  // ✅ restore session
+  // restore session
   useEffect(() => {
     const saved = sessionStorage.getItem("hostSessionId");
-    if (saved) {
-      setSessionId(saved);
-    }
+    if (saved) setSessionId(saved);
   }, []);
 
-  // 🔹 create session
+  // create session
   const generateSession = async () => {
     setLoading(true);
 
@@ -79,12 +73,11 @@ export default function QuizPage() {
     });
 
     sessionStorage.setItem("hostSessionId", id);
-
     setSessionId(id);
     setLoading(false);
   };
 
-  // 🔥 LIVE SESSION (ВАЖНО – тук добавихме въпросите)
+  // 🔥 MAIN LISTENER (FIXED)
   useEffect(() => {
     if (!sessionId) return;
 
@@ -98,20 +91,17 @@ export default function QuizPage() {
 
       if (data.currentQuestion !== undefined) {
         setCurrentQuestion(data.currentQuestion);
+
+        // ✅ FIX – правилно взимаме въпроса
+        const q = data.questions?.[data.currentQuestion];
+        setQuestion(q);
       }
-
-      // ✅ NEW – sync questions
-      setQuestions(data.questions || []);
-      setCurrentIndex(data.currentQuestion || 0);
-
-      const q = data.questions?.[data.currentQuestion];
-      setQuestion(q);
     });
 
     return () => unsubscribe();
   }, [sessionId]);
 
-  // 🔹 participants listener
+  // participants
   useEffect(() => {
     if (!sessionId) return;
 
@@ -178,7 +168,7 @@ export default function QuizPage() {
     return () => clearInterval(interval);
   }, [status]);
 
-  // auto next question
+  // next question
   useEffect(() => {
     if (!sessionId || status !== "in_progress") return;
 
@@ -206,64 +196,50 @@ export default function QuizPage() {
 
   return (
     <main style={mainStyle}>
-      <h1 style={{ fontSize: "2.5rem" }}>
-        Host Control Panel
-      </h1>
+      <h1>Host Control Panel</h1>
 
       {!sessionId ? (
-        <button onClick={generateSession} disabled={loading} style={buttonStyle}>
-          {loading ? "Създаване..." : "Стартирай състезание"}
+        <button onClick={generateSession} disabled={loading}>
+          {loading ? "..." : "Старт"}
         </button>
       ) : (
         <>
-          <h2 style={{ fontSize: "3rem" }}>{sessionId}</h2>
+          <h2>{sessionId}</h2>
 
-          {/* ✅ QUESTION VIEW (НОВО) */}
+          <QRCodeSVG
+            value={`${window.location.origin}/join?session=${sessionId}`}
+            size={200}
+          />
+
+          {/* ✅ ВЪПРОС (FIXED POSITION) */}
           {status === "in_progress" && question && (
             <div style={{ marginTop: 30 }}>
               <h2>{question.text}</h2>
 
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-                maxWidth: "500px",
-                margin: "20px auto"
-              }}>
-                {question.options.map((opt: string, i: number) => (
-                  <div key={i} style={{
-                    padding: "15px",
-                    borderRadius: "10px",
-                    background: "#00ff88",
-                    color: "#003300",
-                    fontWeight: "bold"
-                  }}>
-                    {opt}
-                  </div>
-                ))}
-              </div>
+              {question.options.map((opt: string, i: number) => (
+                <div key={i} style={{
+                  padding: 10,
+                  margin: 5,
+                  background: "#00ff88",
+                  color: "#003300",
+                  borderRadius: 8
+                }}>
+                  {opt}
+                </div>
+              ))}
             </div>
           )}
 
-          {/* START */}
-          {participants.length > 0 && status === "waiting" && (
-            <button onClick={startGame} style={startButtonStyle}>
-              Започни състезание
-            </button>
-          )}
-
-          {/* TIMER */}
           {status === "in_progress" && (
             <>
-              <h3>⏳ {autoTimer}</h3>
-              <h3>Въпрос {currentQuestion + 1} / 5</h3>
-              <h3>Отговорили: {answeredCount}</h3>
+              <p>⏳ {autoTimer}</p>
+              <p>Въпрос {currentQuestion + 1}/5</p>
+              <p>Отговорили: {answeredCount}</p>
             </>
           )}
 
-          {/* FINISH */}
           {status === "finished" && (
-            <h2>🏆 КРАЙ</h2>
+            <h2>🏆 Край</h2>
           )}
         </>
       )}
@@ -272,22 +248,11 @@ export default function QuizPage() {
 }
 
 const mainStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #003d1a, #001a0d)",
+  background: "#001a0d",
+  color: "#00ff88",
   minHeight: "100vh",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
   flexDirection: "column",
-  color: "#00ff88",
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: "15px",
-  background: "#00ff88",
-  border: "none",
-};
-
-const startButtonStyle: React.CSSProperties = {
-  marginTop: "20px",
-  padding: "10px",
+  alignItems: "center",
+  justifyContent: "center"
 };

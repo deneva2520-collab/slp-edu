@@ -172,9 +172,22 @@ export default function QuizPage() {
               ))}
 
               {participants.length > 0 && (
-                <button onClick={startGame} style={btn}>
-                  ▶️ Започни играта
-                </button>
+                <button
+  onClick={generateSession}
+  style={{
+    marginTop: 25,
+    padding: "15px 25px",
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    background: "#00ff88",
+    color: "#003300",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer"
+  }}
+>
+  🚀 Старт
+</button>
               )}
             </>
           )}

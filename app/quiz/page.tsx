@@ -37,10 +37,11 @@ export default function QuizPage() {
     const id = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     await setDoc(doc(db, "sessions", id), {
-      status: "waiting",
-      currentQuestion: 0,
-      questions: []
-    });
+  createdAt: new Date(),
+  status: "waiting",
+  currentQuestion: 0,
+  questions: []
+});
 
     sessionStorage.setItem("hostSessionId", id);
     setSessionId(id);

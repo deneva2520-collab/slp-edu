@@ -186,12 +186,26 @@ export default function QuizPage() {
             size={220}
           />
         </div>
-
-              {participants.length > 0 && (
-                <button onClick={startGame} style={{ marginTop: 20 }}>
-                  ▶️ Започни играта
-                </button>
-          )}
+{participants.length > 0 && (
+  <div style={{ marginTop: 20 }}>
+    <button
+      onClick={startGame}
+      style={{
+        marginTop: 25,
+        padding: "15px 30px",
+        fontSize: "1.2rem",
+        fontWeight: "bold",
+        backgroundColor: "#00ff88",
+        color: "#003d1a",
+        border: "none",
+        borderRadius: "10px",
+        cursor: "pointer"
+      }}
+    >
+      ▶️ Започни играта
+    </button>
+  </div>
+)}
 
           {status === "in_progress" && question && (
             <div style={{ marginTop: 30 }}>
@@ -219,30 +233,60 @@ export default function QuizPage() {
             </div>
           )}
 
-          {status === "finished" && (
-            <div style={{ marginTop: 30 }}>
-              <h2 style={{ fontSize: "2rem", color: "#FFD700" }}>
-                🏆 Край на играта
-              </h2>
-            <button
+       {status === "finished" && (
+  <div style={{ marginTop: 40, textAlign: "center" }}>
+    <h2 style={{ fontSize: "3rem", color: "#FFD700" }}>
+      🏆 КРАЙНО КЛАСИРАНЕ
+    </h2>
+
+    {participants
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .map((p, i) => (
+        <div
+          key={p.id}
+          style={{
+            marginTop: 15,
+            padding: "15px",
+            width: "300px",
+            borderRadius: "10px",
+            background:
+              i === 0
+                ? "#FFD700"
+                : i === 1
+                ? "#C0C0C0"
+                : i === 2
+                ? "#CD7F32"
+                : "#002b15",
+            color: i < 3 ? "#000" : "#00ff88",
+            fontSize: "1.3rem",
+            fontWeight: "bold"
+          }}
+        >
+          #{i + 1} – {p.name} ({p.score} т.)
+        </div>
+      ))}
+
+    <button
       onClick={() => {
         sessionStorage.removeItem("hostSessionId");
         setSessionId(null);
       }}
       style={{
-        marginTop: 20,
-        padding: "12px 25px",
-        borderRadius: "8px",
-        background: "#00ff88",
+        marginTop: 30,
+        padding: "15px 30px",
+        fontSize: "1.1rem",
+        backgroundColor: "#00ff88",
+        color: "#003d1a",
         border: "none",
-        cursor: "pointer",
-        fontWeight: "bold"
+        borderRadius: "10px",
+        cursor: "pointer"
       }}
     >
       🔄 Нова игра
     </button>
-            </div>
-          )}
+  </div>
+)}
         </>
       )}
     </main>

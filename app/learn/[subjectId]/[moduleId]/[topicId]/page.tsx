@@ -2,29 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { db } from "../../../../../lib/firebase";
-import {
-  doc,
-  onSnapshot
-} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 export default function TopicPage() {
   const params = useParams();
-
   const topicId = params.topicId as string;
 
   const [topic, setTopic] = useState<any>(null);
-  console.log("📄 topic:", topic);
-console.log("📄 file:", topic.file);
 
   useEffect(() => {
+    if (!topicId) return;
+
     const unsubscribe = onSnapshot(
       doc(db, "topics", topicId),
       (docSnap) => {
         if (docSnap.exists()) {
+          const data = docSnap.data();
+
+          console.log("🔥 TOPIC DATA:", data);
+
           setTopic({
             id: docSnap.id,
-            ...docSnap.data(),
+            ...data,
           });
         }
       }
@@ -38,19 +38,25 @@ console.log("📄 file:", topic.file);
   }
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>{topic.name}</h1>
+    <main className="topics-container">
+      <h1 className="topics-title">{topic.name}</h1>
 
       {topic.file ? (
-  <iframe
-    src={`/${topic.file}`}
-    width="100%"
-    height="600px"
-    style={{ border: "none" }}
-  />
-) : (
-  <p>Няма файл за този урок ❌</p>
-)}
+        <iframe
+          src={`/${topic.file.trim()}`}  // 🔥 trim за всеки случай
+          key={topic.file}
+          width="100%"
+          height="600px"
+          style={{
+            border: "2px solid #00ff9c",
+            borderRadius: "12px",
+            marginTop: "20px",
+            boxShadow: "0 0 20px rgba(0,255,156,0.3)",
+          }}
+        />
+      ) : (
+        <p style={{ marginTop: 20 }}>Няма файл за този урок ❌</p>
+      )}
     </main>
   );
 }

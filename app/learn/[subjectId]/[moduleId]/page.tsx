@@ -36,22 +36,22 @@ export default function ModulesPage() {
   }, [subjectId]);
 
   return (
-    <main className="modules-container">
-      <h1 className="modules-title">📚 Модули</h1>
+  <main className="modules-container">
+    <h1 className="modules-title">📚 Модули</h1>
 
-      <div className="modules-grid">
-        {modules.map((module: any) => (
-          <div
-            key={module.id}
-            className="module-card"
-            onClick={() =>
-              router.push(`/learn/${subjectId}/${module.id}`)
-            }
-          >
-            {module.name}
-          </div>
-        ))}
-      </div>
-    </main>
-  );
+    <div className="modules-grid">
+      {modules.map((module: any) => (
+        <div
+          key={module.id}
+          className="module-card"
+          onClick={() =>
+            router.push(`/learn/${subjectId}/${module.id}`)
+          }
+        >
+          {module.name}
+        </div>
+      ))}
+    </div>
+  </main>
+);
 }

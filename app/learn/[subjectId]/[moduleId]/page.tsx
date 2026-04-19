@@ -18,10 +18,7 @@ export default function ModulesPage() {
 
     console.log("📘 SUBJECT ID:", subjectId);
 
-    const q = query(
-      collection(db, "modules"),
-      where("subjectId", "==", subjectId)
-    );
+    const q = collection(db, "topics");
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data: any[] = [];

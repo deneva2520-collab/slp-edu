@@ -109,3 +109,43 @@ body {
   box-shadow: 0 0 25px rgba(0, 255, 156, 0.8);
   transform: translateY(-3px);
 }
+/* TOPICS PAGE */
+
+.topics-container {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: linear-gradient(180deg, #012b1d, #001a12);
+  color: #00ff9c;
+  text-align: center;
+}
+
+.topics-title {
+  font-size: 36px;
+  margin-bottom: 30px;
+}
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.topic-card {
+  padding: 20px;
+  border-radius: 16px;
+  border: 2px solid #00ff9c;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 156, 0.3);
+}
+
+.topic-card:hover {
+  background: #00ff9c;
+  color: #003322;
+  box-shadow: 0 0 25px rgba(0, 255, 156, 0.8);
+  transform: translateY(-3px);
+}

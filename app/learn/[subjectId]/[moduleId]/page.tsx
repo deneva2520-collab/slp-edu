@@ -2,22 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { db } from "../../../../lib/firebase";
+import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 
-export default function TopicsPage() {
+export default function ModulesPage() {
   const router = useRouter();
   const params = useParams();
 
   const subjectId = params.subjectId as string;
-  const moduleId = params.moduleId as string;
 
-  const [topics, setTopics] = useState<any[]>([]);
+  const [modules, setModules] = useState<any[]>([]);
 
   useEffect(() => {
     const q = query(
-      collection(db, "topics"),
-      where("moduleId", "==", moduleId)
+      collection(db, "modules"),
+      where("subjectId", "==", subjectId)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -30,26 +29,26 @@ export default function TopicsPage() {
         });
       });
 
-      setTopics(data);
+      setModules(data);
     });
 
     return () => unsubscribe();
-  }, [moduleId]);
+  }, [subjectId]);
 
   return (
-    <main className="topics-container">
-      <h1 className="topics-title">📖 Уроци</h1>
+    <main className="modules-container">
+      <h1 className="modules-title">📚 Модули</h1>
 
-      <div className="topics-grid">
-        {topics.map((topic: any) => (
+      <div className="modules-grid">
+        {modules.map((module: any) => (
           <div
-            key={topic.id}
-            className="topic-card"
+            key={module.id}
+            className="module-card"
             onClick={() =>
-              router.push(`/learn/${subjectId}/${moduleId}/${topic.id}`)
+              router.push(`/learn/${subjectId}/${module.id}`)
             }
           >
-            {topic.name}
+            {module.name}
           </div>
         ))}
       </div>

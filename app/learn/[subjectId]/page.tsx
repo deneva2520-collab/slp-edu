@@ -15,6 +15,8 @@ export default function ModulesPage() {
   const params = useParams();
   const subjectId = params.subjectId as string;
 
+  console.log("🔥 URL subjectId:", subjectId);
+
   const [modules, setModules] = useState<any[]>([]);
 
   useEffect(() => {
@@ -37,6 +39,8 @@ export default function ModulesPage() {
         });
       });
 
+      console.log("🔥 modules from DB:", data);
+
       setModules(data);
 
     });
@@ -47,24 +51,19 @@ export default function ModulesPage() {
 
   return (
     <main style={{ padding: 40 }}>
+
       <h1>📚 Модули</h1>
 
       {modules.length === 0 ? (
         <p>Няма модули 😢</p>
       ) : (
-        modules.map((module) => (
-          <div
-            key={module.id}
-            style={{
-              marginTop: 20,
-              padding: 20,
-              border: "1px solid #00ff88"
-            }}
-          >
-            {module.name}
+        modules.map((m) => (
+          <div key={m.id} style={{ marginTop: 20 }}>
+            {m.name}
           </div>
         ))
       )}
+
     </main>
   );
 }

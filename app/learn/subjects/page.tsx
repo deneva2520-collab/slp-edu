@@ -36,29 +36,30 @@ export default function SubjectsPage() {
   }, []);
 
   return (
-    <main style={{ padding: 40 }}>
+  <main style={{ padding: 40 }}>
+    <h1>📚 Предмети</h1>
 
-      <h1>📚 Предмети</h1>
-
-      {subjects.length === 0 ? (
-        <p>Няма предмети 😢</p>
-      ) : (
-        subjects.map((subject) => {
-
-          console.log("SUBJECT:", subject);
-
-          return (
-            <div
-              key={subject.id}
-              style={{ marginTop: 20, cursor: "pointer" }}
-              onClick={() => router.push(`/learn/${subject.id}`)}
-            >
-              {subject.name}
-            </div>
-          );
-        })
-      )}
-
-    </main>
-  );
+    {subjects.length === 0 ? (
+      <p>Няма предмети 😢</p>
+    ) : (
+      subjects.map((subject) => (
+        <div
+          key={subject.id}
+          onClick={() => {
+            console.log("CLICK subject.id:", subject.id);
+            router.push(`/learn/${subject.id}`);
+          }}
+          style={{
+            padding: 20,
+            border: "1px solid #ccc",
+            marginTop: 10,
+            cursor: "pointer",
+          }}
+        >
+          {subject.name}
+        </div>
+      ))
+    )}
+  </main>
+);
 }

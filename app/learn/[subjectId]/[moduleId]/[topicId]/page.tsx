@@ -14,6 +14,8 @@ export default function TopicPage() {
   const topicId = params.topicId as string;
 
   const [topic, setTopic] = useState<any>(null);
+  console.log("📄 topic:", topic);
+console.log("📄 file:", topic.file);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(

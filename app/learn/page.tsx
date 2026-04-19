@@ -6,16 +6,18 @@ export default function LearnPage() {
   const router = useRouter();
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>📚 Научи</h1>
+    <main className="learn-container">
+      <h1 className="learn-title">📚 Научи</h1>
+
+      <p className="learn-subtitle">
+        Започни своето обучение по интерактивен начин
+      </p>
+
+      <div className="learn-icon">🎯</div>
 
       <button
         onClick={() => router.push("/learn/subjects")}
-        style={{
-          padding: "20px",
-          fontSize: "20px",
-          cursor: "pointer",
-        }}
+        className="learn-btn"
       >
         Влез в обучението
       </button>

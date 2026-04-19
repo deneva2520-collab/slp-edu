@@ -14,6 +14,10 @@ export default function ModulesPage() {
   const [modules, setModules] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!subjectId) return;
+
+    console.log("📘 SUBJECT ID:", subjectId);
+
     const q = query(
       collection(db, "modules"),
       where("subjectId", "==", subjectId)
@@ -23,10 +27,14 @@ export default function ModulesPage() {
       const data: any[] = [];
 
       snapshot.forEach((doc) => {
-        data.push({
+        const item = {
           id: doc.id,
           ...doc.data(),
-        });
+        };
+
+        console.log("📦 MODULE:", item);
+
+        data.push(item);
       });
 
       setModules(data);
@@ -36,22 +44,27 @@ export default function ModulesPage() {
   }, [subjectId]);
 
   return (
-  <main className="modules-container">
-    <h1 className="modules-title">📚 Модули</h1>
+    <main className="modules-container">
+      <h1 className="modules-title">📚 Модули</h1>
 
-    <div className="modules-grid">
-      {modules.map((module: any) => (
-        <div
-          key={module.id}
-          className="module-card"
-          onClick={() =>
-            router.push(`/learn/${subjectId}/${module.id}`)
-          }
-        >
-          {module.name}
-        </div>
-      ))}
-    </div>
-  </main>
-);
+      <div className="modules-grid">
+        {modules.length === 0 ? (
+          <p style={{ opacity: 0.7 }}>Няма модули...</p>
+        ) : (
+          modules.map((module: any) => (
+            <div
+              key={module.id}
+              className="module-card"
+              onClick={() => {
+                console.log("👉 CLICK MODULE:", module.id);
+                router.push(`/learn/${subjectId}/${module.id}`);
+              }}
+            >
+              {module.name}
+            </div>
+          ))
+        )}
+      </div>
+    </main>
+  );
 }

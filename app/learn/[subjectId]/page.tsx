@@ -14,6 +14,7 @@ export default function ModulesPage() {
 
   const params = useParams();
   const subjectId = params.subjectId as string;
+  console.log("🔥 URL subjectId:", subjectId);
 
   console.log("🔥 URL subjectId:", subjectId);
 
@@ -40,7 +41,7 @@ export default function ModulesPage() {
       });
 
       console.log("🔥 modules from DB:", data);
-
+      
       setModules(data);
 
     });

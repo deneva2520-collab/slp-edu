@@ -40,11 +40,12 @@ export default function TopicPage() {
       <h1>{topic.name}</h1>
 
       {/* HTML съдържание */}
-      <div
-        dangerouslySetInnerHTML={{
-          __html: topic.content || "<p>Няма съдържание</p>",
-        }}
-      />
+      <iframe
+  src={`/${topic.file || "variable.html"}`}
+  width="100%"
+  height="600px"
+  style={{ border: "none" }}
+/>
     </main>
   );
 }

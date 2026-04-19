@@ -46,7 +46,33 @@ export default function ModulesPage() {
 
   }, [subjectId]);
 
+// 🔥 HARDCODE за КМИТ (за демо)
+if (subjectId === "3l5JwJwSkelBlJmGOBos") {
   return (
+    <main style={mainStyle}>
+
+      <h1 style={titleStyle}>💻 КМИТ</h1>
+
+      <p style={{ marginBottom: "30px", color: "#ccc" }}>
+        Избери модул
+      </p>
+
+      <div style={gridStyle}>
+
+        <div
+          style={cardStyle}
+          onClick={() => router.push("/learn/kmit/python")}
+        >
+          🐍 Python
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+
+return (
 
     <main style={mainStyle}>
 

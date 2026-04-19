@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python VarLab: Интерактивна Лаборатория за Променливи</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfbf7; /* Warm neutral background */
+            color: #1f2937;
+        }
+        
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Chart Container Utilities */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar for nicer feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6; /* Python Blue-ish */
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .variable-box {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutral Background (#fdfbf7) with Python-inspired accents (Blue #3b82f6, Yellow #eab308) for a calm, educational tone. -->
+    <!-- Application Structure Plan: 
+         1. Intro/Analogy: Physical box visualization to ground the abstract concept.
+         2. Type Scanner: Interactive input + Doughnut Chart to explore data types dynamically.
+         3. Naming Rules: Real-time validator to practice syntax rules.
+         4. Mutability: Line chart visualization to show value changes over time/code execution.
+         5. Quiz: Assessment.
+         This structure moves from Concrete -> Abstract -> Rules -> Process -> Evaluation.
+    -->
+    <!-- Visualization & Content Choices:
+         - Box Visualization (HTML/CSS): Direct mapping to the "box" analogy in the source text.
+         - Doughnut Chart (Chart.js): Visualizes the "collection" of types learned. Goal: Inform/Categorize.
+         - Line Chart (Chart.js): Visualizes the change of value over time. Goal: Change/Process.
+         - Validator (JS Logic): Gamifies the "Rules" section.
+         - NO SVG/Mermaid used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased selection:bg-yellow-200 selection:text-yellow-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🐍</span>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">Python VarLab</span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
+                    <a href="#concept" class="hover:text-blue-600 transition-colors">Концепция</a>
+                    <a href="#types" class="hover:text-blue-600 transition-colors">Типове Данни</a>
+                    <a href="#rules" class="hover:text-blue-600 transition-colors">Правила</a>
+                    <a href="#mutation" class="hover:text-blue-600 transition-colors">Промяна</a>
+                    <a href="#quiz" class="hover:text-blue-600 transition-colors">Тест</a>
+                </div>
+                <!-- Mobile menu button placeholder -->
+                <button class="md:hidden text-2xl" onclick="alert('Използвайте скрол за навигация!')">≡</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 text-center">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
+            Променливите в <span class="text-blue-600">Python</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Разберете как компютърът "помни" информация. Представете си променливата като <span class="font-bold text-slate-800 bg-yellow-100 px-1 rounded">кутия с етикет</span>, в която съхраняваме данни за нашата програма.
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="#concept" class="btn-primary px-8 py-3 rounded-full font-semibold shadow-lg shadow-blue-500/30">Започни Опита</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 space-y-24">
+
+        <!-- SECTION 1: THE CONCEPT (Interactive Box) -->
+        <section id="concept" class="scroll-mt-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="mb-6">
+                        <span class="text-blue-600 font-bold tracking-wider text-sm uppercase">01. Концепция</span>
+                        <h2 class="text-3xl font-bold text-slate-900 mt-2">Какво е променлива?</h2>
+                    </div>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Според урока, променливата е <strong>име, което пази стойност</strong>. Най-лесният начин да си го представим е като кутия. В Python създаването е лесно: просто пишем името, знака равно, и стойността.
+                    </p>
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-semibold text-slate-800 mb-4">Създай своя променлива:</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-500 mb-1">Име на променливата (Етикет)</label>
+                                <input type="text" id="varNameInput" value="age" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 font-code" oninput="updateBox()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-500 mb-1">Стойност (Съдържание)</label>
+                                <input type="text" id="varValueInput" value="13" class="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 font-code" oninput="updateBox()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Representation -->
+                <div class="flex justify-center items-center bg-white p-12 rounded-3xl shadow-xl border border-slate-100">
+                    <div class="relative group">
+                        <!-- Lid -->
+                        <div class="absolute -top-12 left-0 w-full h-12 bg-yellow-600 rounded-t-lg transform origin-bottom transition-transform group-hover:-rotate-12 z-10 flex items-center justify-center border-b border-yellow-800">
+                            <div class="w-16 h-2 bg-yellow-800/20 rounded-full"></div>
+                        </div>
+                        <!-- Box Body -->
+                        <div class="w-64 h-64 bg-yellow-500 rounded-b-lg shadow-2xl flex flex-col items-center justify-center relative overflow-hidden variable-box">
+                            <!-- Label -->
+                            <div class="bg-white px-6 py-2 rounded shadow-md transform -rotate-2 mb-4 border border-slate-200">
+                                <span id="boxLabel" class="font-code text-xl font-bold text-slate-800">age</span>
+                            </div>
+                            <!-- Content -->
+                            <div class="text-white font-code text-5xl font-bold drop-shadow-md transition-all transform hover:scale-110" id="boxValue">
+                                13
+                            </div>
+                            <div class="absolute bottom-2 text-yellow-800/40 text-xs font-mono">0x7F... (Memory)</div>
+                        </div>
+                        <!-- Shadow -->
+                        <div class="absolute -bottom-4 left-4 right-4 h-4 bg-black/10 rounded-[100%] blur-md"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DATA TYPES (Scanner & Chart) -->
+        <section id="types" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <span class="text-blue-600 font-bold tracking-wider text-sm uppercase">02. Типове Данни</span>
+                <h2 class="text-3xl font-bold text-slate-900 mt-2">Скенер за Типове</h2>
+                <p class="text-slate-600 mt-4 max-w-2xl mx-auto">
+                    В Python не е нужно да казвате типа предварително (динамично типизиране). Python сам разбира дали сте въвели число, текст или булева стойност. Тествайте скенера по-долу!
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Scanner Input -->
+                <div class="lg:col-span-1 section-card p-8 bg-blue-50/50 border border-blue-100">
+                    <h3 class="font-bold text-lg text-slate-800 mb-4">Въведи данни за анализ:</h3>
+                    <input type="text" id="typeInput" placeholder="Напиши нещо... (напр. 3.14)" class="w-full p-4 rounded-xl border-2 border-blue-200 focus:border-blue-500 outline-none font-code text-lg mb-6 shadow-sm">
+                    <button onclick="analyzeType()" class="w-full btn-primary py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20">Сканирай Типа</button>
+                    
+                    <div id="typeResult" class="mt-8 hidden animate-fade-in">
+                        <div class="text-sm text-slate-500 uppercase tracking-wide font-bold mb-1">Засечен Тип:</div>
+                        <div id="detectedTypeTitle" class="text-3xl font-bold text-blue-600 font-code mb-2">str</div>
+                        <p id="typeDescription" class="text-slate-700 text-sm leading-relaxed bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                            Текст (низ). Винаги ограден в кавички.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Reference Cards -->
+                <div class="lg:col-span-1 grid grid-cols-1 gap-4">
+                    <div class="p-4 bg-white rounded-xl border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <span class="font-code font-bold text-lg">int</span>
+                            <span class="text-2xl">🔢</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Цели числа (напр. 5, -10)</p>
+                    </div>
+                    <div class="p-4 bg-white rounded-xl border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <span class="font-code font-bold text-lg">float</span>
+                            <span class="text-2xl">🔣</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Дробни числа (напр. 3.14)</p>
+                    </div>
+                    <div class="p-4 bg-white rounded-xl border-l-4 border-yellow-500 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <span class="font-code font-bold text-lg">str</span>
+                            <span class="text-2xl">🔤</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Текст (напр. "Здравей")</p>
+                    </div>
+                    <div class="p-4 bg-white rounded-xl border-l-4 border-purple-500 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <span class="font-code font-bold text-lg">bool</span>
+                            <span class="text-2xl">✅</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Логически (True/False)</p>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="lg:col-span-1 section-card p-6 flex flex-col items-center justify-center">
+                    <h3 class="font-bold text-sm text-slate-500 uppercase mb-4">История на сканирането</h3>
+                    <div class="chart-container">
+                        <canvas id="typesChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-400 mt-4">Диаграмата показва разпределението на типовете, които сте тествали.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: NAMING RULES (Validator) -->
+        <section id="rules" class="scroll-mt-24 bg-slate-900 text-white rounded-3xl p-8 md:p-16 relative overflow-hidden">
+            <!-- Decorative background elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+
+            <div class="relative z-10 grid md:grid-cols-2 gap-12">
+                <div>
+                    <span class="text-blue-300 font-bold tracking-wider text-sm uppercase">03. Правила</span>
+                    <h2 class="text-3xl font-bold mt-2 mb-6">Валидни ли са имената?</h2>
+                    <ul class="space-y-4 text-slate-300">
+                        <li class="flex items-start gap-3">
+                            <span class="text-green-400 text-xl">✔</span>
+                            <span>Могат да съдържат букви, цифри и долна черта (_).</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-green-400 text-xl">✔</span>
+                            <span>Трябва да започват с буква или долна черта.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-red-400 text-xl">❌</span>
+                            <span>Не могат да започват с цифра.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-red-400 text-xl">❌</span>
+                            <span>Не трябва да съвпадат с команди (напр. print, class).</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-red-400 text-xl">❌</span>
+                            <span>Без интервали (използвайте _).</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+                    <label class="block text-sm font-bold text-blue-200 mb-2">Тествай име за променлива:</label>
+                    <div class="relative">
+                        <input type="text" id="nameTestInput" placeholder="_myVariable1" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-4 text-white font-code focus:ring-2 focus:ring-blue-400 outline-none" oninput="validateName()">
+                        <div class="absolute right-4 top-4 text-2xl" id="validationIcon">❓</div>
+                    </div>
+                    <div id="validationMessage" class="mt-4 text-sm font-medium min-h-[20px] text-slate-300">
+                        Започнете да пишете, за да проверите...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: CHANGING VALUES (Timeline Chart) -->
+        <section id="mutation" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <span class="text-blue-600 font-bold tracking-wider text-sm uppercase">04. Промяна на Стойност</span>
+                <h2 class="text-3xl font-bold text-slate-900 mt-2">Времева Линия на Стойността</h2>
+                <p class="text-slate-600 mt-4 max-w-2xl mx-auto">
+                    Компютърът изпълнява кода ред по ред. Ако променим стойността на променлива, старата стойност се изтрива и се заменя с новата. Вижте как се променя променливата <code>points</code> (точки) в една игра.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+                <!-- Code Panel -->
+                <div class="lg:col-span-4 bg-slate-800 rounded-xl p-6 shadow-lg text-white font-code text-sm overflow-hidden">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="text-slate-400 ml-auto text-xs">game.py</span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div id="codeStep0" class="p-2 rounded transition-colors opacity-50">
+                            <span class="text-purple-400"># Начало</span><br>
+                            points = <span class="text-yellow-400">0</span>
+                        </div>
+                        <div id="codeStep1" class="p-2 rounded transition-colors opacity-50">
+                            <span class="text-purple-400"># Събрахме бонуси</span><br>
+                            points = <span class="text-yellow-400">10</span>
+                        </div>
+                        <div id="codeStep2" class="p-2 rounded transition-colors opacity-50">
+                            <span class="text-purple-400"># Още точки</span><br>
+                            points = <span class="text-yellow-400">15</span>
+                        </div>
+                        <div id="codeStep3" class="p-2 rounded transition-colors opacity-50">
+                            <span class="text-purple-400"># Изчисление (15 + 5)</span><br>
+                            points = points + <span class="text-yellow-400">5</span>
+                        </div>
+                         <div id="codeStep4" class="p-2 rounded transition-colors opacity-50">
+                            <span class="text-purple-400"># Край на играта (Нулиране)</span><br>
+                            points = <span class="text-yellow-400">0</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-700">
+                        <button onclick="prevStep()" class="text-slate-400 hover:text-white transition-colors text-sm">◀ Назад</button>
+                        <button onclick="nextStep()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-lg transition-all font-bold text-sm">Изпълни ред ▶</button>
+                    </div>
+                </div>
+
+                <!-- Visualization Panel -->
+                <div class="lg:col-span-8 section-card p-6 md:p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-slate-800">Стойност на 'points' във времето</h3>
+                        <div class="bg-yellow-100 text-yellow-800 px-4 py-1 rounded-full font-code font-bold border border-yellow-200">
+                            points = <span id="currentPointsValue">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: QUIZ -->
+        <section id="quiz" class="scroll-mt-24 max-w-3xl mx-auto">
+             <div class="text-center mb-10">
+                <span class="text-blue-600 font-bold tracking-wider text-sm uppercase">05. Проверка</span>
+                <h2 class="text-3xl font-bold text-slate-900 mt-2">Бърз Тест</h2>
+            </div>
+            
+            <div class="space-y-6" id="quizContainer">
+                <!-- Question 1 -->
+                <div class="section-card p-6">
+                    <p class="font-bold text-lg text-slate-800 mb-4">1. Какво е променлива?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q1" value="wrong" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>Постоянна стойност, която никога не се променя.</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q1" value="correct" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>Име (етикет), което пази стойност в паметта.</span>
+                        </label>
+                    </div>
+                    <div class="mt-4 hidden p-3 rounded bg-green-100 text-green-800 text-sm font-medium feedback">Вярно! Точно като кутия с етикет.</div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="section-card p-6">
+                    <p class="font-bold text-lg text-slate-800 mb-4">2. Кой тип данни се използва за текст?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q2" value="wrong1" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>int</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q2" value="correct" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>str (string)</span>
+                        </label>
+                         <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q2" value="wrong2" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>float</span>
+                        </label>
+                    </div>
+                    <div class="mt-4 hidden p-3 rounded bg-green-100 text-green-800 text-sm font-medium feedback">Вярно! String идва от "низ" от символи.</div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="section-card p-6">
+                    <p class="font-bold text-lg text-slate-800 mb-4">3. Валидно ли е името <code>2player_score</code>?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q3" value="wrong" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>Да, защото има букви и цифри.</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="radio" name="q3" value="correct" class="mr-3 w-5 h-5 text-blue-600">
+                            <span>Не, защото започва с цифра.</span>
+                        </label>
+                    </div>
+                    <div class="mt-4 hidden p-3 rounded bg-green-100 text-green-800 text-sm font-medium feedback">Вярно! Имената не могат да започват с цифра.</div>
+                </div>
+                
+                <button onclick="checkQuiz()" class="w-full btn-primary py-4 rounded-xl font-bold shadow-lg text-lg">Провери Отговорите</button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-12 border-t border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-4">Създадено за КМИТ 7. клас</p>
+            <p class="text-sm">Базирано на учебните материали за Променливи в Python.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. BOX ANALOGY LOGIC ---
+        function updateBox() {
+            const name = document.getElementById('varNameInput').value;
+            const value = document.getElementById('varValueInput').value;
+            
+            // Limit text length for visual sanity
+            const displayValue = value.length > 8 ? value.substring(0,6) + '..' : value;
+            const displayName = name.length > 10 ? name.substring(0,8) + '..' : name;
+
+            document.getElementById('boxLabel').textContent = displayName || 'name';
+            document.getElementById('boxValue').textContent = displayValue || '?';
+        }
+
+        // --- 2. TYPE SCANNER LOGIC & CHART ---
+        let typeChartInstance = null;
+        const typeData = {
+            labels: ['int (Цяло)', 'float (Дробно)', 'str (Текст)', 'bool (Логическо)'],
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#3b82f6', '#22c55e', '#eab308', '#a855f7'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        };
+
+        function initTypeChart() {
+            const ctx = document.getElementById('typesChart').getContext('2d');
+            typeChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: typeData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Inter', sans-serif" } } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        function analyzeType() {
+            const input = document.getElementById('typeInput').value.trim();
+            const resultBox = document.getElementById('typeResult');
+            const title = document.getElementById('detectedTypeTitle');
+            const desc = document.getElementById('typeDescription');
+            
+            let typeIndex = -1; // 0: int, 1: float, 2: str, 3: bool
+
+            resultBox.classList.remove('hidden');
+
+            // Logic to mimic Python detection
+            if (input === "") {
+                resultBox.classList.add('hidden');
+                return;
+            }
+
+            // Check Bool
+            if (input.toLowerCase() === 'true' || input.toLowerCase() === 'false') {
+                title.textContent = "bool";
+                title.className = "text-3xl font-bold font-code mb-2 text-purple-600";
+                desc.textContent = "Това е булев тип (Boolean). Има само две възможни стойности: True (Истина) и False (Лъжа).";
+                typeIndex = 3;
+            }
+            // Check Int (Regex for integer)
+            else if (/^-?\d+$/.test(input)) {
+                title.textContent = "int";
+                title.className = "text-3xl font-bold font-code mb-2 text-blue-600";
+                desc.textContent = "Това е цяло число (Integer). Използва се за броене, точки, нива и други цели стойности.";
+                typeIndex = 0;
+            }
+            // Check Float (Regex for float)
+            else if (/^-?\d*\.\d+$/.test(input)) {
+                title.textContent = "float";
+                title.className = "text-3xl font-bold font-code mb-2 text-green-600";
+                desc.textContent = "Това е дробно число (Float). Използва се за по-точни измервания, цени, температура.";
+                typeIndex = 1;
+            }
+            // Default to String
+            else {
+                title.textContent = "str";
+                title.className = "text-3xl font-bold font-code mb-2 text-yellow-600";
+                desc.textContent = "Това е текст (String). В Python винаги се огражда в кавички, но тук го засичаме като всичко, което не е число или bool.";
+                typeIndex = 2;
+            }
+
+            // Update Chart
+            if (typeIndex !== -1) {
+                typeData.datasets[0].data[typeIndex]++;
+                typeChartInstance.update();
+            }
+        }
+
+        // --- 3. NAMING VALIDATOR ---
+        const pythonKeywords = ['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield', 'print'];
+
+        function validateName() {
+            const name = document.getElementById('nameTestInput').value;
+            const icon = document.getElementById('validationIcon');
+            const msg = document.getElementById('validationMessage');
+            
+            if (name.length === 0) {
+                icon.textContent = '❓';
+                msg.textContent = 'Започнете да пишете...';
+                msg.className = 'mt-4 text-sm font-medium text-slate-300';
+                return;
+            }
+
+            // Validation Logic
+            let isValid = true;
+            let error = "";
+
+            if (/^\d/.test(name)) {
+                isValid = false;
+                error = "Грешка: Името не може да започва с цифра!";
+            } else if (/\s/.test(name)) {
+                isValid = false;
+                error = "Грешка: Името не може да съдържа интервали!";
+            } else if (/[^a-zA-Z0-9_]/.test(name)) { // Simplified ASCII check for this level
+                isValid = false;
+                error = "Грешка: Само букви, цифри и долна черта!";
+            } else if (pythonKeywords.includes(name)) {
+                isValid = false;
+                error = "Грешка: Това е запазена дума в Python!";
+            }
+
+            if (isValid) {
+                icon.textContent = '✅';
+                msg.textContent = 'Супер! Това е валидно име на променлива.';
+                msg.className = 'mt-4 text-sm font-bold text-green-400';
+            } else {
+                icon.textContent = '❌';
+                msg.textContent = error;
+                msg.className = 'mt-4 text-sm font-bold text-red-400';
+            }
+        }
+
+        // --- 4. TIMELINE CHART ---
+        let timelineChart = null;
+        let currentStep = 0;
+        const steps = [
+            { codeId: 'codeStep0', value: 0 },
+            { codeId: 'codeStep1', value: 10 },
+            { codeId: 'codeStep2', value: 15 },
+            { codeId: 'codeStep3', value: 20 }, // 15 + 5
+            { codeId: 'codeStep4', value: 0 }
+        ];
+
+        function initTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Start'],
+                    datasets: [{
+                        label: 'Стойност на points',
+                        data: [0],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6',
+                        pointRadius: 6,
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, suggestedMax: 25 },
+                        x: { display: true }
+                    }
+                }
+            });
+            updateStepVisuals();
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateTimeline();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateTimeline();
+            }
+        }
+
+        function updateTimeline() {
+            // Update Data array based on current step index (slice to simulate history)
+            const currentHistory = steps.slice(0, currentStep + 1);
+            
+            timelineChart.data.labels = currentHistory.map((_, i) => `Step ${i}`);
+            timelineChart.data.datasets[0].data = currentHistory.map(s => s.value);
+            timelineChart.update();
+
+            document.getElementById('currentPointsValue').textContent = steps[currentStep].value;
+            updateStepVisuals();
+        }
+
+        function updateStepVisuals() {
+            // Reset all
+            steps.forEach(s => {
+                const el = document.getElementById(s.codeId);
+                el.classList.remove('bg-slate-700', 'opacity-100', 'border-l-4', 'border-green-400');
+                el.classList.add('opacity-50');
+            });
+
+            // Highlight current
+            const activeEl = document.getElementById(steps[currentStep].codeId);
+            activeEl.classList.remove('opacity-50');
+            activeEl.classList.add('bg-slate-700', 'opacity-100', 'border-l-4', 'border-green-400');
+        }
+
+        // --- 5. QUIZ LOGIC ---
+        function checkQuiz() {
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            const q2 = document.querySelector('input[name="q2"]:checked');
+            const q3 = document.querySelector('input[name="q3"]:checked');
+
+            const feedbacks = document.querySelectorAll('.feedback');
+            feedbacks.forEach(f => f.classList.add('hidden'));
+
+            if (!q1 || !q2 || !q3) {
+                alert("Моля, отговорете на всички въпроси!");
+                return;
+            }
+
+            // Q1 Check
+            if (q1.value === 'correct') {
+                q1.parentElement.parentElement.nextElementSibling.classList.remove('hidden');
+                q1.parentElement.classList.add('bg-green-50', 'border-green-500');
+            } else {
+                q1.parentElement.classList.add('bg-red-50', 'border-red-500');
+            }
+
+            // Q2 Check
+            if (q2.value === 'correct') {
+                q2.parentElement.parentElement.nextElementSibling.classList.remove('hidden');
+                q2.parentElement.classList.add('bg-green-50', 'border-green-500');
+            } else {
+                q2.parentElement.classList.add('bg-red-50', 'border-red-500');
+            }
+
+            // Q3 Check
+            if (q3.value === 'correct') {
+                q3.parentElement.parentElement.nextElementSibling.classList.remove('hidden');
+                q3.parentElement.classList.add('bg-green-50', 'border-green-500');
+            } else {
+                q3.parentElement.classList.add('bg-red-50', 'border-red-500');
+            }
+        }
+
+        // Initialize Charts on Load
+        window.onload = function() {
+            initTypeChart();
+            initTimelineChart();
+            updateBox(); // Init box
+        };
+    </script>
+</body>
+</html>

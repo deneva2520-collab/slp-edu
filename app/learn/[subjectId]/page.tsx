@@ -78,6 +78,62 @@ export default function ModulesPage() {
   return () => unsubscribe();
 
 }, [subjectId]);
+return (
+  <main style={{ padding: 40 }}>
+
+    <h1>📚 Модули</h1>
+
+    {modules.length === 0 ? (
+      <p style={{ marginTop: 20 }}>
+        Няма модули 😢
+      </p>
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          gap: "30px",
+          flexWrap: "wrap",
+          marginTop: "30px",
+        }}
+      >
+        {modules.map((module: any) => (
+          <div
+            key={module.id}
+            onClick={() => {
+              console.log("👉 CLICK module:", module.id);
+              router.push(`/learn/${subjectId}/${module.id}`);
+            }}
+            style={{
+              background: "#002b15",
+              border: "1px solid #00ff88",
+              borderRadius: "14px",
+              width: "220px",
+              padding: "30px",
+              cursor: "pointer",
+              color: "#FFD700",
+              fontSize: "20px",
+              fontWeight: "600",
+              textAlign: "center",
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.05)";
+              e.currentTarget.style.boxShadow =
+                "0 0 20px rgba(0,255,136,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            {module.name}
+          </div>
+        ))}
+      </div>
+    )}
+
+  </main>
+);
 
  return (
   <main style={{ padding: 40 }}>

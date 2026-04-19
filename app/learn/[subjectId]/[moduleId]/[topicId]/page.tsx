@@ -21,6 +21,7 @@ export default function TopicPage() {
           const data = docSnap.data();
 
           console.log("🔥 TOPIC DATA:", data);
+          console.log("📄 FILE RAW:", data.file);
 
           setTopic({
             id: docSnap.id,
@@ -37,14 +38,19 @@ export default function TopicPage() {
     return <p style={{ padding: 40 }}>Зареждане...</p>;
   }
 
+  // 🔥 гарантирано чист file
+  const file = topic.file?.trim();
+
+  console.log("📄 FINAL FILE:", file);
+
   return (
     <main className="topics-container">
       <h1 className="topics-title">{topic.name}</h1>
 
-      {topic.file ? (
+      {file ? (
         <iframe
-          src={`/${topic.file.trim()}`}  // 🔥 trim за всеки случай
-          key={topic.file}
+          src={`/${file}`}
+          key={file}
           width="100%"
           height="600px"
           style={{
@@ -52,10 +58,13 @@ export default function TopicPage() {
             borderRadius: "12px",
             marginTop: "20px",
             boxShadow: "0 0 20px rgba(0,255,156,0.3)",
+            background: "white", // 🔥 важно за HTML
           }}
         />
       ) : (
-        <p style={{ marginTop: 20 }}>Няма файл за този урок ❌</p>
+        <p style={{ marginTop: 20 }}>
+          Няма файл за този урок ❌
+        </p>
       )}
     </main>
   );

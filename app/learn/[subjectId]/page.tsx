@@ -14,9 +14,10 @@ import {
 export default function ModulesPage() {
   const router = useRouter();
 
-  const params = useParams();
-  const subjectId = params.subjectId as string;
+const params = useParams();
+const subjectId = params.subjectId as string;
 
+console.log("URL subjectId:", subjectId);
   const [modules, setModules] = useState<any[]>([]);
 
   useEffect(() => {

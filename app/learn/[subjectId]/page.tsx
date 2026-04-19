@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { db } from "../../../lib/firebase";
 import {
   collection,
@@ -11,9 +11,8 @@ import {
 } from "firebase/firestore";
 
 export default function ModulesPage() {
-  const router = useRouter();
-  const params = useParams();
 
+  const params = useParams();
   const subjectId = params.subjectId as string;
 
   const [modules, setModules] = useState<any[]>([]);
@@ -21,8 +20,6 @@ export default function ModulesPage() {
   useEffect(() => {
 
     if (!subjectId) return;
-
-    console.log("Subject ID:", subjectId);
 
     const q = query(
       collection(db, "modules"),
@@ -40,9 +37,8 @@ export default function ModulesPage() {
         });
       });
 
-      console.log("Modules:", data); // 👈 важно
-
       setModules(data);
+
     });
 
     return () => unsubscribe();
@@ -50,58 +46,25 @@ export default function ModulesPage() {
   }, [subjectId]);
 
   return (
+    <main style={{ padding: 40 }}>
+      <h1>📚 Модули</h1>
 
-    <main style={mainStyle}>
-
-      <h1 style={titleStyle}>📚 Модули</h1>
-
-      <div style={gridStyle}>
-
-        {modules.map((module) => (
-
+      {modules.length === 0 ? (
+        <p>Няма модули 😢</p>
+      ) : (
+        modules.map((module) => (
           <div
             key={module.id}
-            style={cardStyle}
-            onClick={() => router.push(`/learn/${subjectId}/${module.id}`)}
+            style={{
+              marginTop: 20,
+              padding: 20,
+              border: "1px solid #00ff88"
+            }}
           >
             {module.name}
           </div>
-
-        ))}
-
-      </div>
-
+        ))
+      )}
     </main>
-
   );
-
 }
-
-const mainStyle: React.CSSProperties = {
-  minHeight: "100vh",
-  background: "linear-gradient(135deg,#003d1a,#001a0d)",
-  padding: "60px 40px",
-  color: "#00ff88",
-  textAlign: "center",
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: "42px",
-  marginBottom: "40px",
-};
-
-const gridStyle: React.CSSProperties = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "30px",
-  justifyContent: "center",
-};
-
-const cardStyle: React.CSSProperties = {
-  background: "#002b15",
-  border: "1px solid #00ff88",
-  borderRadius: "14px",
-  width: "220px",
-  padding: "30px",
-  cursor: "pointer",
-};

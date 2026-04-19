@@ -39,13 +39,16 @@ export default function TopicPage() {
     <main style={{ padding: 40 }}>
       <h1>{topic.name}</h1>
 
-      {/* HTML съдържание */}
-      <iframe
-  src={`/${topic.file || "variable.html"}`}
-  width="100%"
-  height="600px"
-  style={{ border: "none" }}
-/>
+      {topic.file ? (
+  <iframe
+    src={`/${topic.file}`}
+    width="100%"
+    height="600px"
+    style={{ border: "none" }}
+  />
+) : (
+  <p>Няма файл за този урок ❌</p>
+)}
     </main>
   );
 }

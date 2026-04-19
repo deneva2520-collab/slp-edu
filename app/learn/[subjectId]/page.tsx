@@ -22,33 +22,36 @@ export default function ModulesPage() {
 
   useEffect(() => {
 
-    if (!subjectId) return;
+  if (!subjectId) return;
 
-    const q = query(
-      collection(db, "modules"),
-      where("subjectId", "==", subjectId)
-    );
+  console.log("FILTER subjectId:", subjectId);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+  const q = query(
+    collection(db, "modules"),
+    where("subjectId", "==", subjectId)
+  );
 
-      const data: any[] = [];
+  const unsubscribe = onSnapshot(q, (snapshot) => {
 
-      snapshot.forEach((doc) => {
-        data.push({
-          id: doc.id,
-          ...doc.data(),
-        });
+    const data: any[] = [];
+
+    snapshot.forEach((doc) => {
+      console.log("DOC subjectId:", doc.data().subjectId);
+
+      data.push({
+        id: doc.id,
+        ...doc.data(),
       });
-
-      console.log("🔥 modules from DB:", data);
-      
-      setModules(data);
-
     });
 
-    return () => unsubscribe();
+    console.log("modules from DB:", data);
 
-  }, [subjectId]);
+    setModules(data);
+  });
+
+  return () => unsubscribe();
+
+}, [subjectId]);
 
   return (
     <main style={{ padding: 40 }}>

@@ -38,7 +38,6 @@ export default function TopicPage() {
     return <p style={{ padding: 40 }}>Зареждане...</p>;
   }
 
-  // 🔥 гарантирано чист file
   const file = topic.file?.trim();
 
   console.log("📄 FINAL FILE:", file);
@@ -48,19 +47,34 @@ export default function TopicPage() {
       <h1 className="topics-title">{topic.name}</h1>
 
       {file ? (
-        <iframe
-          src={`/${file}`}
-          key={file}
-          width="100%"
-          height="600px"
-          style={{
-            border: "2px solid #00ff9c",
-            borderRadius: "12px",
-            marginTop: "20px",
-            boxShadow: "0 0 20px rgba(0,255,156,0.3)",
-            background: "white", // 🔥 важно за HTML
-          }}
-        />
+        file.endsWith(".mp4") ? (
+          // 🎬 VIDEO
+          <video
+            src={`/${file}`}
+            controls
+            width="100%"
+            style={{
+              marginTop: "20px",
+              borderRadius: "12px",
+              boxShadow: "0 0 20px rgba(0,255,156,0.3)",
+            }}
+          />
+        ) : (
+          // 🌐 HTML
+          <iframe
+            src={`/${file}`}
+            key={file}
+            width="100%"
+            height="600px"
+            style={{
+              border: "2px solid #00ff9c",
+              borderRadius: "12px",
+              marginTop: "20px",
+              boxShadow: "0 0 20px rgba(0,255,156,0.3)",
+              background: "white",
+            }}
+          />
+        )
       ) : (
         <p style={{ marginTop: 20 }}>
           Няма файл за този урок ❌

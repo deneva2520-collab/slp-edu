@@ -39,6 +39,7 @@ export default function TopicPage() {
   }
 
   const files = topic.files || [];
+  const genially = topic.genially;
 
   console.log("📄 FINAL FILES:", files);
 
@@ -89,6 +90,32 @@ export default function TopicPage() {
           Няма файлове за този урок ❌
         </p>
       )}
+      {genially && (
+  <div
+    style={{
+      textAlign: "center",
+      marginTop: "30px",
+    }}
+  >
+    <a
+      href={genially}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "inline-block",
+        padding: "14px 24px",
+        background: "#00ff9c",
+        color: "#002b1f",
+        fontWeight: "bold",
+        borderRadius: "10px",
+        textDecoration: "none",
+        boxShadow: "0 0 15px rgba(0,255,156,0.4)",
+      }}
+    >
+      📚 Отвори дигиталния алманах
+    </a>
+  </div>
+)}
     </main>
   );
 }

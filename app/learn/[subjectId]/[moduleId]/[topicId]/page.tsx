@@ -85,11 +85,11 @@ export default function TopicPage() {
             />
           );
         })
-      ) : (
-        <p style={{ marginTop: 20 }}>
-          Няма файлове за този урок ❌
-        </p>
-      )}
+      ) : !genially ? (
+  <p style={{ marginTop: 20 }}>
+    Няма файлове за този урок ❌
+  </p>
+) : null}
       {genially && (
   <div
     style={{

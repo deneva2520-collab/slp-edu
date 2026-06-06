@@ -21,7 +21,7 @@ export default function ActionButtons() {
           justifyContent: "center",
           alignItems: "center",
           gap: "20px",
-          marginTop: "50px",
+          marginTop: "30px",
           flexWrap: "wrap"
         }}
       >

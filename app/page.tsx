@@ -25,13 +25,15 @@ export default function Home() {
 
       {/* 📝 Съдържание */}
       <div style={contentStyle}>
-        <h1 style={{ fontSize: "48px", marginTop: "400px" }}>
-          Добре дошли в Quiz състезанието
-        </h1>
-
-        <p style={{ fontSize: "40px", marginTop: "20px" }}>
-          Включи се и тествай знанията си!
-        </p>
+       <h1
+  style={{
+    fontSize: "56px",
+    marginBottom: "8px",
+    fontWeight: "500",
+  }}
+>
+  Превърни знанието в приключение!
+</h1>
         <ActionButtons />
       </div>
     </main>
@@ -73,7 +75,7 @@ const overlayStyle: React.CSSProperties = {
 const contentStyle: React.CSSProperties = {
   zIndex: 2,
   padding: "20px",
-  marginTop: "40px"
+  marginTop: "360px"
 };
 const buttonStyle: React.CSSProperties = {
   marginTop: "40px",

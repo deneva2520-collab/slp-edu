@@ -3,50 +3,64 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 
 export default function TopicsPage() {
   const router = useRouter();
   const params = useParams();
 
-  const subjectId = params.subjectId as string;
-  const moduleId = params.moduleId as string;
+  const subjectId = String(params.subjectId || "");
+  const moduleId = String(params.moduleId || "").trim();
 
   const [topics, setTopics] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!moduleId) return;
 
-    const unsubscribe = onSnapshot(collection(db, "topics"), (snapshot) => {
-      const data: any[] = [];
+    console.log("URL SUBJECT ID:", subjectId);
+    console.log("URL MODULE ID:", moduleId);
 
-      snapshot.forEach((doc) => {
-        data.push({
+    const q = query(
+      collection(db, "topics"),
+      where("moduleId", "==", moduleId)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        });
-      });
+        }));
 
-      // 🔥 ФИЛТЪР ПО MODULE ID
-      const filtered = data.filter(
-        (t: any) => t.moduleId === moduleId
-      );
+        console.log("FILTERED TOPICS FROM FIRESTORE:", data);
 
-      console.log("MODULE ID:", moduleId);
-      console.log("FILTERED TOPICS:", filtered);
-
-      setTopics(filtered);
-    });
+        setTopics(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("FIRESTORE ERROR:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
-  }, [moduleId]);
+  }, [moduleId, subjectId]);
 
   return (
     <main className="topics-container">
       <h1 className="topics-title">📖 Уроци</h1>
 
       <div className="topics-grid">
-        {topics.length === 0 ? (
+        {loading ? (
+          <p style={{ opacity: 0.7 }}>Зареждане...</p>
+        ) : topics.length === 0 ? (
           <p style={{ opacity: 0.7 }}>Няма уроци...</p>
         ) : (
           topics.map((topic: any) => (
@@ -54,12 +68,10 @@ export default function TopicsPage() {
               key={topic.id}
               className="topic-card"
               onClick={() =>
-                router.push(
-                  `/learn/${subjectId}/${moduleId}/${topic.id}`
-                )
+                router.push(`/learn/${subjectId}/${moduleId}/${topic.id}`)
               }
             >
-              {topic.name}
+              {topic.name || topic.title || "Без име"}
             </div>
           ))
         )}

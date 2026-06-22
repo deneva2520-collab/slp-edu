@@ -40,6 +40,16 @@ export default function TopicPage() {
     return () => unsubscribe();
   }, [topicId]);
 
+  const getGoogleDrivePreviewUrl = (url: string) => {
+    if (!url) return "";
+
+    if (url.includes("drive.google.com") && url.includes("/view")) {
+      return url.replace("/view", "/preview");
+    }
+
+    return url;
+  };
+
   if (loading) {
     return <p style={{ padding: 40 }}>Зареждане...</p>;
   }
@@ -50,6 +60,7 @@ export default function TopicPage() {
 
   const files = topic.files || [];
   const genially = topic.genially;
+  const pdfUrl = topic.pdfUrl ? getGoogleDrivePreviewUrl(topic.pdfUrl) : "";
 
   return (
     <main className="topics-container">
@@ -66,6 +77,16 @@ export default function TopicPage() {
           height="720"
           allowFullScreen
           className="genially-frame"
+        />
+      )}
+
+      {pdfUrl && (
+        <iframe
+          src={pdfUrl}
+          width="100%"
+          height="850"
+          className="pdf-frame"
+          allow="autoplay"
         />
       )}
 
@@ -96,7 +117,7 @@ export default function TopicPage() {
           );
         })}
 
-      {!genially && files.length === 0 && (
+      {!genially && !pdfUrl && files.length === 0 && (
         <p style={{ marginTop: 20 }}>Няма съдържание за този урок ❌</p>
       )}
     </main>

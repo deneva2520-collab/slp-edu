@@ -7,9 +7,10 @@ import { doc, onSnapshot } from "firebase/firestore";
 
 export default function TopicPage() {
   const params = useParams();
-  const topicId = params.topicId as string;
+  const topicId = String(params.topicId || "");
 
   const [topic, setTopic] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!topicId) return;
@@ -18,40 +19,60 @@ export default function TopicPage() {
       doc(db, "topics", topicId),
       (docSnap) => {
         if (docSnap.exists()) {
-          const data = docSnap.data();
-
-          console.log("🔥 TOPIC DATA:", data);
-          console.log("📄 FILES RAW:", data.files);
-
           setTopic({
             id: docSnap.id,
-            ...data,
+            ...docSnap.data(),
           });
+        } else {
+          setTopic(null);
         }
+
+        setLoading(false);
+      },
+      (error) => {
+        console.error("TOPIC ERROR:", error);
+        setLoading(false);
       }
     );
 
     return () => unsubscribe();
   }, [topicId]);
 
-  if (!topic) {
+  if (loading) {
     return <p style={{ padding: 40 }}>Зареждане...</p>;
+  }
+
+  if (!topic) {
+    return <p style={{ padding: 40 }}>Урокът не е намерен ❌</p>;
   }
 
   const files = topic.files || [];
   const genially = topic.genially;
 
-  console.log("📄 FINAL FILES:", files);
-
   return (
     <main className="topics-container">
       <h1 className="topics-title">{topic.name}</h1>
 
-      {files.length > 0 ? (
+      {genially && (
+        <iframe
+          src={genially}
+          width="100%"
+          height="700"
+          allowFullScreen
+          style={{
+            border: "2px solid #00ff9c",
+            borderRadius: "12px",
+            marginTop: "20px",
+            background: "white",
+            boxShadow: "0 0 20px rgba(0,255,156,0.3)",
+          }}
+        />
+      )}
+
+      {files.length > 0 &&
         files.map((file: string, index: number) => {
           const cleanFile = file.trim();
 
-          // 🎬 VIDEO (mp4)
           if (cleanFile.endsWith(".mp4")) {
             return (
               <video
@@ -68,54 +89,26 @@ export default function TopicPage() {
             );
           }
 
-          // 🌐 HTML (или други)
           return (
             <iframe
               key={index}
               src={`/${cleanFile}`}
               width="100%"
-              height="600px"
+              height="600"
               style={{
                 border: "2px solid #00ff9c",
                 borderRadius: "12px",
                 marginTop: "20px",
-                boxShadow: "0 0 20px rgba(0,255,156,0.3)",
                 background: "white",
+                boxShadow: "0 0 20px rgba(0,255,156,0.3)",
               }}
             />
           );
-        })
-      ) : !genially ? (
-  <p style={{ marginTop: 20 }}>
-    Няма файлове за този урок ❌
-  </p>
-) : null}
-      {genially && (
-  <div
-    style={{
-      textAlign: "center",
-      marginTop: "30px",
-    }}
-  >
-    <a
-      href={genially}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        display: "inline-block",
-        padding: "14px 24px",
-        background: "#00ff9c",
-        color: "#002b1f",
-        fontWeight: "bold",
-        borderRadius: "10px",
-        textDecoration: "none",
-        boxShadow: "0 0 15px rgba(0,255,156,0.4)",
-      }}
-    >
-      📚 Отвори дигиталния алманах
-    </a>
-  </div>
-)}
+        })}
+
+      {!genially && files.length === 0 && (
+        <p style={{ marginTop: 20 }}>Няма съдържание за този урок ❌</p>
+      )}
     </main>
   );
 }

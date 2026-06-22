@@ -187,3 +187,36 @@ body {
   box-shadow: 0 0 25px rgba(0, 255, 156, 0.8);
   transform: translateY(-4px);
 }
+.back-btn {
+  margin-bottom: 24px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: #00ff9c;
+  color: #002b1f;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(0, 255, 156, 0.35);
+  transition: 0.2s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(0, 255, 156, 0.6);
+}
+
+.genially-frame,
+.lesson-frame {
+  border: 2px solid #00ff9c;
+  border-radius: 14px;
+  margin-top: 20px;
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 255, 156, 0.3);
+}
+
+.lesson-video {
+  margin-top: 20px;
+  border-radius: 14px;
+  box-shadow: 0 0 20px rgba(0, 255, 156, 0.3);
+}

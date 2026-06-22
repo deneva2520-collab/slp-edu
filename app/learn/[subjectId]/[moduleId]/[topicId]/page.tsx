@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 
 export default function TopicPage() {
   const params = useParams();
+  const router = useRouter();
+
   const topicId = String(params.topicId || "");
 
   const [topic, setTopic] = useState<any>(null);
@@ -51,21 +53,19 @@ export default function TopicPage() {
 
   return (
     <main className="topics-container">
+      <button className="back-btn" onClick={() => router.back()}>
+        ← Назад към уроците
+      </button>
+
       <h1 className="topics-title">{topic.name}</h1>
 
       {genially && (
         <iframe
           src={genially}
           width="100%"
-          height="700"
+          height="720"
           allowFullScreen
-          style={{
-            border: "2px solid #00ff9c",
-            borderRadius: "12px",
-            marginTop: "20px",
-            background: "white",
-            boxShadow: "0 0 20px rgba(0,255,156,0.3)",
-          }}
+          className="genially-frame"
         />
       )}
 
@@ -80,11 +80,7 @@ export default function TopicPage() {
                 src={`/${cleanFile}`}
                 controls
                 width="100%"
-                style={{
-                  marginTop: "20px",
-                  borderRadius: "12px",
-                  boxShadow: "0 0 20px rgba(0,255,156,0.3)",
-                }}
+                className="lesson-video"
               />
             );
           }
@@ -95,13 +91,7 @@ export default function TopicPage() {
               src={`/${cleanFile}`}
               width="100%"
               height="600"
-              style={{
-                border: "2px solid #00ff9c",
-                borderRadius: "12px",
-                marginTop: "20px",
-                background: "white",
-                boxShadow: "0 0 20px rgba(0,255,156,0.3)",
-              }}
+              className="lesson-frame"
             />
           );
         })}

@@ -259,3 +259,14 @@ body {
   border-radius: 14px;
   box-shadow: 0 0 20px rgba(0, 255, 156, 0.3);
 }
+.open-lesson-btn {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 16px 28px;
+  background: #00ff9c;
+  color: #002b1f;
+  font-weight: bold;
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: 0 0 18px rgba(0, 255, 156, 0.4);
+}

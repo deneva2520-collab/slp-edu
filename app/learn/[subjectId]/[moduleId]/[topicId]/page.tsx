@@ -40,16 +40,6 @@ export default function TopicPage() {
     return () => unsubscribe();
   }, [topicId]);
 
-  const getGoogleDrivePreviewUrl = (url: string) => {
-    if (!url) return "";
-
-    if (url.includes("drive.google.com") && url.includes("/view")) {
-      return url.replace("/view", "/preview");
-    }
-
-    return url;
-  };
-
   if (loading) {
     return <p style={{ padding: 40 }}>Зареждане...</p>;
   }
@@ -59,8 +49,11 @@ export default function TopicPage() {
   }
 
   const files = topic.files || [];
-  const genially = topic.genially;
-  const pdfUrl = topic.pdfUrl ? getGoogleDrivePreviewUrl(topic.pdfUrl) : "";
+  const genially = topic.genially || "";
+  const pdfUrl = topic.pdfUrl || "";
+  const videoUrl = topic.videoUrl || "";
+
+  const openUrl = genially || pdfUrl || videoUrl || "";
 
   return (
     <main className="topics-container">
@@ -70,54 +63,32 @@ export default function TopicPage() {
 
       <h1 className="topics-title">{topic.name}</h1>
 
-      {genially && (
-        <iframe
-          src={genially}
-          width="100%"
-          height="720"
-          allowFullScreen
-          className="genially-frame"
-        />
-      )}
-
-      {pdfUrl && (
-        <iframe
-          src={pdfUrl}
-          width="100%"
-          height="850"
-          className="pdf-frame"
-          allow="autoplay"
-        />
-      )}
-
-      {files.length > 0 &&
+      {openUrl ? (
+        <a
+          href={openUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="open-lesson-btn"
+        >
+          🔗 Отвори урока
+        </a>
+      ) : files.length > 0 ? (
         files.map((file: string, index: number) => {
           const cleanFile = file.trim();
 
-          if (cleanFile.endsWith(".mp4")) {
-            return (
-              <video
-                key={index}
-                src={`/${cleanFile}`}
-                controls
-                width="100%"
-                className="lesson-video"
-              />
-            );
-          }
-
           return (
-            <iframe
+            <a
               key={index}
-              src={`/${cleanFile}`}
-              width="100%"
-              height="600"
-              className="lesson-frame"
-            />
+              href={`/${cleanFile}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="open-lesson-btn"
+            >
+              🔗 Отвори файл {index + 1}
+            </a>
           );
-        })}
-
-      {!genially && !pdfUrl && files.length === 0 && (
+        })
+      ) : (
         <p style={{ marginTop: 20 }}>Няма съдържание за този урок ❌</p>
       )}
     </main>
